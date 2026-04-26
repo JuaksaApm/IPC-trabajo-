@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Text?>
+
+<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mapademo.LogInController">
+   <children>
+      <Button fx:id="clickLogIn" layoutX="324.0" layoutY="292.0" mnemonicParsing="false" text="Log In" />
+      <PasswordField fx:id="passwordIn" layoutX="211.0" layoutY="209.0" prefHeight="26.0" prefWidth="175.0" />
+      <TextField fx:id="userIn" layoutX="211.0" layoutY="135.0" prefHeight="26.0" prefWidth="175.0" />
+      <Text layoutX="211.0" layoutY="131.0" strokeType="OUTSIDE" strokeWidth="0.0" text="User" wrappingWidth="112.58319091796875" />
+      <Text layoutX="211.0" layoutY="205.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Password" wrappingWidth="112.58319091796875" />
+      <Text layoutX="211.0" layoutY="288.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Not Registered?" wrappingWidth="112.58319091796875" />
+      <Button fx:id="regUser" layoutX="211.0" layoutY="292.0" mnemonicParsing="false" onAction="#initialize" text="Register" />
+      <Text layoutX="187.0" layoutY="337.0" strokeType="OUTSIDE" strokeWidth="0.0" text="(To be implemented)" wrappingWidth="112.58319091796875" />
+      <Text layoutX="416.0" layoutY="227.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Make error messages not terminal messages" wrappingWidth="112.58319091796875" />
+   </children>
+</AnchorPane>
