@@ -35,7 +35,7 @@ import upv.ipc.sportlib.User;
  */
 public class RegisterController implements Initializable {
     private String rutaAvatar = null;
-    private ImageView avatarPreview;
+    
     
     @FXML
     private TextField userReg;
@@ -48,11 +48,13 @@ public class RegisterController implements Initializable {
     @FXML
     private Button cancelReg;
     @FXML
-    private Button AvatarSel;
-    @FXML
     private Label ErrorReg;
     @FXML
     private TextField email;
+    @FXML
+    private Button avatarSel;
+    @FXML
+    private ImageView avatarPreview;
 
     /**
      * Initializes the controller class.
@@ -60,6 +62,8 @@ public class RegisterController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         register.setOnAction(this::handleRegister);
+        cancelReg.setOnAction(this::cancel);
+        avatarSel.setOnAction(this::avatar);
     }    
     
      private void handleRegister(ActionEvent event) {
@@ -118,7 +122,7 @@ public class RegisterController implements Initializable {
          }
      }
      
-     private void Avatar(ActionEvent event) {
+     private void avatar(ActionEvent event) {
          FileChooser fileChooser=new FileChooser();
          fileChooser.setTitle("Select profile picture");
          
@@ -140,6 +144,23 @@ public class RegisterController implements Initializable {
 
     @FXML
     private void initialize(ActionEvent event) {
+    }
+    
+    private void cancel(ActionEvent event){
+    try{
+             //load the log in screen 
+             Parent mapaRoot = FXMLLoader.load(getClass().getResource("logIn.fxml"));
+             //get the stage from the button
+             Stage stage = (Stage) register.getScene().getWindow();
+             //change scene
+            Scene scene = new Scene(mapaRoot);
+            stage.setScene(scene);
+            stage.show();
+         }catch(IOException e){
+         System.out.println("Error while laoding main screen");
+         e.printStackTrace();
+         }
+         
     }
     
 }

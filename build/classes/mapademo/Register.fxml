@@ -9,8 +9,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Text?>
 
-
-<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="600.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/25" fx:controller="mapademo.RegisterController">
+<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mapademo.RegisterController">
    <children>
       <TextField fx:id="userReg" layoutX="208.0" layoutY="30.0" prefHeight="26.0" prefWidth="175.0" />
       <PasswordField fx:id="passwordReg" layoutX="208.0" layoutY="73.0" prefHeight="26.0" prefWidth="175.0" />
@@ -21,12 +20,11 @@
       <DatePicker fx:id="birthDate" layoutX="208.0" layoutY="187.0" />
       <Text layoutX="208.0" layoutY="181.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Birth Date *" wrappingWidth="96.5367431640625" />
       <Button fx:id="register" layoutX="323.0" layoutY="373.0" mnemonicParsing="false" onAction="#initialize" text="Register" />
-      <Button fx:id="cancelReg" layoutX="207.0" layoutY="373.0" mnemonicParsing="false" text="Cancel" />
+      <Button fx:id="cancelReg" layoutX="207.0" layoutY="373.0" mnemonicParsing="false" onAction="#initialize" text="Cancel" />
       <Text layoutX="208.0" layoutY="226.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Avatar" wrappingWidth="96.5367431640625" />
-      <Text layoutX="52.0" layoutY="121.0" strokeType="OUTSIDE" strokeWidth="0.0" text="All to be implemented" wrappingWidth="78.13677978515625" />
-      <ImageView fitHeight="93.0" fitWidth="175.0" layoutX="208.0" layoutY="254.0" pickOnBounds="true" preserveRatio="true" />
-      <Button fx:id="AvatarSel" layoutX="207.0" layoutY="229.0" mnemonicParsing="false" text="Select Avatar" />
-      <Label fx:id="ErrorReg" layoutX="208.0" layoutY="355.0" prefHeight="18.0" prefWidth="175.0" text="Label" />
+      <ImageView fx:id="avatarPreview" fitHeight="93.0" fitWidth="175.0" layoutX="208.0" layoutY="254.0" pickOnBounds="true" preserveRatio="true" />
+      <Button fx:id="avatarSel" layoutX="207.0" layoutY="229.0" mnemonicParsing="false" onAction="#initialize" text="Select Avatar" />
+      <Label fx:id="ErrorReg" layoutX="208.0" layoutY="355.0" prefHeight="18.0" prefWidth="175.0" />
       <Text layoutX="91.0" layoutY="279.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Try to make error messages more helpful" wrappingWidth="78.13677978515625" />
    </children>
 </AnchorPane>

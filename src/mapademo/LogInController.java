@@ -49,9 +49,6 @@ public class LogInController implements Initializable {
         String password=passwordIn.getText();
         String username=userIn.getText();
         
-        System.out.println("Username: " + username);
-        System.out.println("Password: " + password);
-        
         SportActivityApp app=SportActivityApp.getInstance();
         
         boolean SucessfulLogIn= app.login(username,password);
@@ -59,7 +56,7 @@ public class LogInController implements Initializable {
         System.out.println("¡Login exitoso!");
         try{
             //load the map if successful
-        Parent mapaRoot = FXMLLoader.load(getClass().getResource("FXMLDocument.fxml"));
+        Parent mapaRoot = FXMLLoader.load(getClass().getResource("Menu.fxml"));
             //get the stage from the button
         Stage stage = (Stage) clickLogIn.getScene().getWindow();    
             //change scene
