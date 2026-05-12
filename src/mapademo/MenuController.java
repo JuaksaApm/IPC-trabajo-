@@ -25,7 +25,7 @@ import upv.ipc.sportlib.User;
  *
  * @author Jack
  */
-public class FXMLController implements Initializable {
+public class MenuController implements Initializable {
 
     @FXML
     private Button logOut;
