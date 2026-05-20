@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Text?>
+
+
+<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="600.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/25" fx:controller="mapademo.EditController">
+   <children>
+      <TextField fx:id="email" layoutX="209.0" layoutY="117.0" prefHeight="26.0" prefWidth="175.0" />
+      <DatePicker fx:id="birthD" layoutX="208.0" layoutY="161.0" />
+      <ImageView fx:id="imageAv" fitHeight="150.0" fitWidth="200.0" layoutX="212.0" layoutY="223.0" pickOnBounds="true" preserveRatio="true" />
+      <Text layoutX="201.0" layoutY="69.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Password" wrappingWidth="190.93670654296875" />
+      <Button fx:id="selAvatar" layoutX="212.0" layoutY="187.0" mnemonicParsing="false" onAction="#initialize" text="Select Avatar" />
+      <Button fx:id="confirm" layoutX="358.0" layoutY="373.0" mnemonicParsing="false" onAction="#initialize" text="Confirm" />
+      <Button fx:id="cancel" layoutX="212.0" layoutY="373.0" mnemonicParsing="false" onAction="#initialize" text="Cancel" />
+      <Text layoutX="200.0" layoutY="157.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Date of birth" wrappingWidth="190.93670654296875" />
+      <Text layoutX="201.0" layoutY="113.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Email" wrappingWidth="190.93670654296875" />
+      <Text layoutX="200.0" layoutY="18.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Fill in the fields you desire to change" wrappingWidth="200.0" />
+      <Label fx:id="errPass" layoutX="398.0" layoutY="77.0" prefHeight="18.0" prefWidth="191.0" textFill="RED" />
+      <Label fx:id="errEmail" layoutX="398.0" layoutY="121.0" prefHeight="18.0" prefWidth="191.0" textFill="RED" />
+      <Label fx:id="errBDay" layoutX="398.0" layoutY="164.0" prefHeight="18.0" prefWidth="191.0" textFill="RED" />
+      <PasswordField fx:id="password" layoutX="208.0" layoutY="73.0" prefHeight="26.0" prefWidth="175.0" />
+   </children>
+</AnchorPane>
