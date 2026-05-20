@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Gemini GPX Generator">
+  <trk>
+    <name>Run from CAC to UPV</name>
+    <trkseg>
+      <trkpt lat="39.454500" lon="-0.350300">
+        <ele>12.0</ele>
+        <time>2026-05-20T10:00:00Z</time>
+      </trkpt>
+      
+      <trkpt lat="39.457800" lon="-0.352100">
+        <ele>12.5</ele>
+        <time>2026-05-20T10:03:30Z</time>
+      </trkpt>
+      <trkpt lat="39.460000" lon="-0.354000">
+        <ele>13.0</ele>
+        <time>2026-05-20T10:05:00Z</time>
+      </trkpt>
+      <trkpt lat="39.462500" lon="-0.356500">
+        <ele>13.5</ele>
+        <time>2026-05-20T10:07:30Z</time>
+      </trkpt>
+      
+      <trkpt lat="39.465800" lon="-0.359200">
+        <ele>14.0</ele>
+        <time>2026-05-20T10:10:00Z</time>
+      </trkpt>
+      
+      <trkpt lat="39.468500" lon="-0.358000">
+        <ele>14.5</ele>
+        <time>2026-05-20T10:12:30Z</time>
+      </trkpt>
+      <trkpt lat="39.471500" lon="-0.357100">
+        <ele>15.0</ele>
+        <time>2026-05-20T10:15:00Z</time>
+      </trkpt>
+      
+      <trkpt lat="39.473000" lon="-0.351000">
+        <ele>15.5</ele>
+        <time>2026-05-20T10:17:30Z</time>
+      </trkpt>
+      <trkpt lat="39.475500" lon="-0.345500">
+        <ele>16.0</ele>
+        <time>2026-05-20T10:20:00Z</time>
+      </trkpt>
+      
+      <trkpt lat="39.478000" lon="-0.346000">
+        <ele>16.0</ele>
+        <time>2026-05-20T10:22:30Z</time>
+      </trkpt>
+      
+      <trkpt lat="39.481100" lon="-0.346600">
+        <ele>16.0</ele>
+        <time>2026-05-20T10:25:00Z</time>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
