@@ -54,6 +54,10 @@ public class MenuController implements Initializable {
     private TableColumn<GpxActivity, String> timeColumn;
     @FXML
     private TableColumn<GpxActivity, String> dateColumn;
+    @FXML
+    private Button newActivity;
+    @FXML
+    private Button history;
 
     /**
      * Initializes the controller class.
@@ -273,6 +277,37 @@ public class MenuController implements Initializable {
             System.err.println("Error launching the Activity Map View Scene root swap transaction.");
             e.printStackTrace();
         }
+    }
+
+    @FXML
+    private void logOutHandle(ActionEvent event) {
+        SportActivityApp app= SportActivityApp.getInstance();
+        
+        app.logout();
+        try{
+            //load screen 
+        Parent loginRoot = FXMLLoader.load(getClass().getResource("logIn.fxml"));
+            //get stage 
+        Stage stage = (Stage) logOut.getScene().getWindow();
+            //change scene
+        Scene scene = new Scene(loginRoot);
+        stage.setScene(scene);
+        stage.show();
+        }catch(IOException e){}
+    }
+
+    @FXML
+    private void openHistory(ActionEvent event) {
+        try{
+            //load screen 
+        Parent loginRoot = FXMLLoader.load(getClass().getResource("History.fxml"));
+            //get stage 
+        Stage stage = (Stage) history.getScene().getWindow();
+            //change scene
+        Scene scene = new Scene(loginRoot);
+        stage.setScene(scene);
+        stage.show();
+        }catch(IOException e){}
     }
     
     /**

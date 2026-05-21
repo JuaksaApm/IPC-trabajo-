@@ -19,7 +19,7 @@
             <Font size="25.0" />
          </font>
       </Text>
-      <Button fx:id="logOut" layoutX="530.0" layoutY="366.0" mnemonicParsing="false" text="Log out" />
+      <Button fx:id="logOut" layoutX="530.0" layoutY="366.0" mnemonicParsing="false" onAction="#logOutHandle" text="Log out" />
       <Button fx:id="edit" layoutX="520.0" layoutY="84.0" mnemonicParsing="false" text="Edit Profile" />
       <ImageView fx:id="profilePic" fitHeight="84.0" fitWidth="87.0" layoutX="513.0" pickOnBounds="true" preserveRatio="true" />
       <AnchorPane layoutY="50.0" prefHeight="350.0" prefWidth="500.0" style="-fx-background-color: #282626;">
@@ -85,5 +85,6 @@
             </GridPane>
          </children>
       </AnchorPane>
+      <Button fx:id="history" layoutX="519.0" layoutY="132.0" mnemonicParsing="false" onAction="#openHistory" prefHeight="26.0" prefWidth="74.0" text="History" />
    </children>
 </AnchorPane>
