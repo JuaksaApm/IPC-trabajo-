@@ -66,3 +66,55 @@ S17.642,20.762,13.558,20.762z";
 .map-pin .arrow-button .arrow {
     -fx-padding: 0;
 }
+
+.button-main{
+    -fx-background-color:  #f87400;
+    -fx-text-fill: white;
+    -fx-cursor: hand;
+}
+
+.menu-background{
+    -fx-background-color:  #282626;
+}
+
+.vbox-color{
+    -fx-background-color: white;
+}
+
+.text-color{
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.table-back{   
+    -fx-background-color:  #000000;
+}
+
+.back-text{
+    -fx-background-color: #282626;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.date-picker {
+    -fx-background-color: #2b2b2b;
+    -fx-background-radius: 5px;
+    -fx-border-color: transparent;
+}
+
+.date-picker .text-field {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+}
+
+.date-picker .arrow-button {
+    -fx-background-color: transparent;
+}
+
+.date-picker .arrow-button .arrow {
+    -fx-background-color: white; 
+}
+
+.labelerr-color{
+    -fx-text-fill: red;
+}

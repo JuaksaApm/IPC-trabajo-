@@ -63,8 +63,16 @@ public class EditController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         SportActivityApp app= SportActivityApp.getInstance();
         Image image=app.getCurrentUser().getAvatar();
+        if(image!=null){imageAv.setImage(image);}
+        else{try {
         
-        imageAv.setImage(image);
+                    String imagePath = getClass().getResource("/resources/default_avatar.png").toExternalForm();
+        
+                    Image defaultAvatar = new Image(imagePath);
+                    imageAv.setImage(defaultAvatar);
+                }catch (Exception e) {
+                    System.out.println("ERROR");
+                }}
         
         cancel.setOnAction(this::cancelEdit);
         selAvatar.setOnAction(this::avatar);

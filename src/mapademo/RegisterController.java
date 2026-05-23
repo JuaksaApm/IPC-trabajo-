@@ -55,18 +55,41 @@ public class RegisterController implements Initializable {
     private Button avatarSel;
     @FXML
     private ImageView avatarPreview;
+    @FXML
+    private Label user_err;
+    @FXML
+    private Label pass_err;
+    @FXML
+    private Label email_err;
+    @FXML
+    private Label birth_err;
 
     /**
      * Initializes the controller class.
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        try {
+        
+                    String imagePath = getClass().getResource("/resources/default_avatar.png").toExternalForm();
+        
+                    Image defaultAvatar = new Image(imagePath);
+                    avatarPreview.setImage(defaultAvatar);
+                }catch (Exception e) {
+                    System.out.println("ERROR");
+                }
         register.setOnAction(this::handleRegister);
         cancelReg.setOnAction(this::cancel);
         avatarSel.setOnAction(this::avatar);
     }    
     
      private void handleRegister(ActionEvent event) {
+        ErrorReg.setText("");
+        user_err.setText("");
+        pass_err.setText("");
+        email_err.setText("");
+        birth_err.setText("");
+        
         String password=passwordReg.getText();
         String username=userReg.getText();
         String emailUser=email.getText();
@@ -78,24 +101,25 @@ public class RegisterController implements Initializable {
         }
         
         if(!User.checkNickName(username)){
-        ErrorReg.setText("Invalid Nickname");
-        return;
+        user_err.setText("Nick must be 6-15 characters ,letters ,digits ,hyphen or underscore only");
+        
         }
         
         
         if(!User.checkPassword(password)){
-        ErrorReg.setText("Invalid password");
-        return;
+        pass_err.setText(" 8 to 20 characters, with at least one uppercase & lowercase letter," +
+        "one digit and one symbol");
+        
         }
         
         if(!User.checkEmail(emailUser)){
-        ErrorReg.setText("Invalid email");
-        return;
+        email_err.setText(" valid user@domain format");
+        
         }
         
         if(!User.isOlderThan(birthD,12)){
-        ErrorReg.setText("Must be at least 12");
-        return;
+        birth_err.setText("the user must be atleast 12 years old");
+        
         }
         
          SportActivityApp app=SportActivityApp.getInstance();

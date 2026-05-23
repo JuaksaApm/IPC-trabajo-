@@ -14,6 +14,8 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
@@ -34,7 +36,9 @@ public class LogInController implements Initializable {
     @FXML
     private TextField userIn;
     @FXML
-    private Button regUser;
+    private Hyperlink regUser;
+    @FXML
+    private Label idkerr;
 
     /**
      * Initializes the controller class.
@@ -64,16 +68,16 @@ public class LogInController implements Initializable {
         stage.setScene(scene);
         stage.show();
         }catch(IOException e){
-        System.out.println("Error while loading map");
+        System.out.println("Soy error IOException en LogInController.java");
         e.printStackTrace();
         }
         }else{
-        System.out.println("logIn failed");
-        
+        idkerr.setText("Invalid nickname or password");
         passwordIn.clear();
         }
     }
     
+    @FXML
     private void goToReg(ActionEvent event) {
        try{
             //load Reg screen 
@@ -90,8 +94,5 @@ public class LogInController implements Initializable {
        }
     }
 
-    @FXML
-    private void initialize(ActionEvent event) {
-    }
     
 }

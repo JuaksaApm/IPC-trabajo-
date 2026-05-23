@@ -9,22 +9,26 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Text?>
 
-<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mapademo.RegisterController">
+<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="416.0" styleClass="table-back" stylesheets="@../resources/estilos.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mapademo.RegisterController">
    <children>
-      <TextField fx:id="userReg" layoutX="208.0" layoutY="30.0" prefHeight="26.0" prefWidth="175.0" />
-      <PasswordField fx:id="passwordReg" layoutX="208.0" layoutY="73.0" prefHeight="26.0" prefWidth="175.0" />
-      <Text layoutX="208.0" layoutY="27.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Username *" wrappingWidth="70.936767578125" />
-      <Text layoutX="208.0" layoutY="69.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Password *" wrappingWidth="59.73675537109375" />
-      <TextField fx:id="email" layoutX="207.0" layoutY="142.0" prefHeight="26.0" prefWidth="175.0" />
-      <Text layoutX="208.0" layoutY="138.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Email adress *" wrappingWidth="96.5367431640625" />
-      <DatePicker fx:id="birthDate" layoutX="208.0" layoutY="187.0" />
-      <Text layoutX="208.0" layoutY="181.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Birth Date *" wrappingWidth="96.5367431640625" />
-      <Button fx:id="register" layoutX="323.0" layoutY="373.0" mnemonicParsing="false" onAction="#initialize" text="Register" />
-      <Button fx:id="cancelReg" layoutX="207.0" layoutY="373.0" mnemonicParsing="false" onAction="#initialize" text="Cancel" />
-      <Text layoutX="208.0" layoutY="226.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Avatar" wrappingWidth="96.5367431640625" />
-      <ImageView fx:id="avatarPreview" fitHeight="93.0" fitWidth="175.0" layoutX="208.0" layoutY="254.0" pickOnBounds="true" preserveRatio="true" />
-      <Button fx:id="avatarSel" layoutX="207.0" layoutY="229.0" mnemonicParsing="false" onAction="#initialize" text="Select Avatar" />
-      <Label fx:id="ErrorReg" layoutX="208.0" layoutY="355.0" prefHeight="18.0" prefWidth="175.0" />
-      <Text layoutX="91.0" layoutY="279.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Try to make error messages more helpful" wrappingWidth="78.13677978515625" />
+      <TextField fx:id="userReg" layoutX="11.0" layoutY="50.0" prefHeight="26.0" prefWidth="175.0" styleClass="back-text" />
+      <PasswordField fx:id="passwordReg" layoutX="232.0" layoutY="50.0" prefHeight="26.0" prefWidth="175.0" styleClass="back-text" />
+      <Text fill="WHITE" layoutX="11.0" layoutY="43.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="back-text" text="Username *" wrappingWidth="175.0" />
+      <Text fill="WHITE" layoutX="232.0" layoutY="42.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="back-text" text="Password *" wrappingWidth="175.0" />
+      <TextField fx:id="email" layoutX="14.0" layoutY="151.0" prefHeight="26.0" prefWidth="175.0" styleClass="back-text" />
+      <Text fill="WHITE" layoutX="14.0" layoutY="137.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="back-text" text="Email adress *" wrappingWidth="175.0" />
+      <DatePicker fx:id="birthDate" layoutX="231.0" layoutY="150.0" styleClass="date-picker" />
+      <Text fill="WHITE" layoutX="232.0" layoutY="144.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="back-text" text="Birth Date *" wrappingWidth="175.20000000000005" />
+      <Button fx:id="register" layoutX="267.0" layoutY="373.0" mnemonicParsing="false" onAction="#initialize" prefHeight="26.0" prefWidth="142.0" styleClass="button-main" text="Register" />
+      <Button fx:id="cancelReg" layoutX="207.0" layoutY="373.0" mnemonicParsing="false" onAction="#initialize" styleClass="back-text" text="Cancel" />
+      <Text layoutX="14.0" layoutY="204.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Avatar" wrappingWidth="96.5367431640625" />
+      <ImageView fx:id="avatarPreview" fitHeight="109.0" fitWidth="175.0" layoutX="132.0" layoutY="234.0" pickOnBounds="true" preserveRatio="true" />
+      <Button fx:id="avatarSel" layoutX="14.0" layoutY="234.0" mnemonicParsing="false" onAction="#initialize" styleClass="button-main" text="Select Avatar" />
+      <Label fx:id="ErrorReg" layoutX="208.0" layoutY="355.0" prefHeight="18.0" prefWidth="175.0" styleClass="labelerr-color" textFill="RED" />
+      <Label fx:id="user_err" layoutX="14.0" layoutY="75.0" minHeight="-Infinity" prefHeight="52.0" prefWidth="175.0" styleClass="labelerr-color" wrapText="true" />
+      <Label fx:id="pass_err" layoutX="232.0" layoutY="75.0" minHeight="-Infinity" prefHeight="52.0" prefWidth="175.0" styleClass="labelerr-color" wrapText="true" />
+      <Label fx:id="email_err" layoutX="14.0" layoutY="182.0" prefHeight="52.0" prefWidth="175.0" styleClass="labelerr-color" />
+      <Label fx:id="birth_err" layoutX="232.0" layoutY="182.0" prefHeight="52.0" prefWidth="175.0" styleClass="labelerr-color" wrapText="true" />
+      <Text fill="WHITE" layoutX="177.0" layoutY="19.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text-color" text="REGISTER" wrappingWidth="84.79999999999995" />
    </children>
 </AnchorPane>

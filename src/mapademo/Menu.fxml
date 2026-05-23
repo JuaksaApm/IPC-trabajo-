@@ -14,19 +14,19 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mapademo.MenuController">
+<AnchorPane id="AnchorPane" prefHeight="403.0" prefWidth="603.0" styleClass="menu-background" stylesheets="@../resources/estilos.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mapademo.MenuController">
    <children>
-      <Text layoutX="181.0" layoutY="24.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Main Menu" wrappingWidth="138.09808349609375">
+      <Text fill="WHITE" layoutX="181.0" layoutY="24.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text-color" text="Main Menu" wrappingWidth="138.09808349609375">
          <font>
             <Font size="25.0" />
          </font>
       </Text>
-      <Button fx:id="logOut" layoutX="514.0" layoutY="366.0" mnemonicParsing="false" onAction="#logOutHandle" prefHeight="26.0" prefWidth="74.0" text="Log out" />
-      <Button fx:id="edit" layoutX="519.0" layoutY="105.0" mnemonicParsing="false" text="Edit Profile" />
-      <ImageView fx:id="profilePic" fitHeight="87.0" fitWidth="87.0" layoutX="513.0" pickOnBounds="true" preserveRatio="true" />
-      <AnchorPane layoutY="50.0" prefHeight="350.0" prefWidth="500.0" style="-fx-background-color: #282626;">
+      <Button fx:id="logOut" layoutX="495.0" layoutY="377.0" mnemonicParsing="false" onAction="#logOutHandle" prefHeight="26.0" prefWidth="108.0" styleClass="button-main" text="Log out" />
+      <Button fx:id="edit" layoutX="492.0" layoutY="105.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="108.0" styleClass="button-main" text="Edit Profile" />
+      <ImageView fx:id="profilePic" fitHeight="87.0" fitWidth="108.0" layoutX="502.0" pickOnBounds="true" preserveRatio="true" />
+      <AnchorPane layoutY="50.0" prefHeight="350.0" prefWidth="486.0" style="-fx-background-color: #282626;">
          <children>
-            <Button layoutX="392.0" layoutY="12.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="87.0" style="-fx-background-color: #f87400;" text="Load Map" textFill="WHITE">
+            <Button layoutX="392.0" layoutY="12.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="87.0" style="-fx-background-color: #f87400;" styleClass="button-main" text="Load Map" textFill="WHITE">
                <graphic>
                   <ImageView fitHeight="15.0" fitWidth="15.0" pickOnBounds="true" preserveRatio="true" rotate="-45.0">
                      <image>
@@ -38,7 +38,7 @@
                   <Font name="Arial Black" size="10.0" />
                </font>
             </Button>
-            <Button fx:id="newActivity" layoutX="14.0" layoutY="12.0" mnemonicParsing="false" onAction="#handleOpenGpxChooser" prefHeight="25.0" prefWidth="108.0" style="-fx-background-color: #f87400;" text="New Activity" textFill="WHITE">
+            <Button fx:id="newActivity" layoutX="14.0" layoutY="12.0" mnemonicParsing="false" onAction="#handleOpenGpxChooser" prefHeight="25.0" prefWidth="108.0" style="-fx-background-color: #f87400;" styleClass="button-main" text="New Activity" textFill="WHITE">
                <graphic>
                   <ImageView fitHeight="15.0" fitWidth="15.0" pickOnBounds="true" preserveRatio="true" rotate="-45.0">
                      <image>
@@ -59,9 +59,9 @@
                 <RowConstraints maxHeight="58.0" minHeight="0.0" prefHeight="28.0" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
-                  <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="1">
+                  <AnchorPane prefHeight="48.0" prefWidth="466.0" GridPane.rowIndex="1">
                      <children>
-                        <Button layoutY="5.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="121.0" style="-fx-background-color: #f87400;" text="Monthly Stats" textFill="WHITE">
+                        <Button layoutY="5.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="121.0" style="-fx-background-color: #f87400;" styleClass="button-main" text="Monthly Stats" textFill="WHITE">
                            <graphic>
                               <ImageView fitHeight="35.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
                                  <image>
@@ -75,7 +75,7 @@
                         </Button>
                      </children>
                   </AnchorPane>
-                  <TableView fx:id="activityTable" prefHeight="247.0" prefWidth="465.0" style="-fx-background-color: #000000;">
+                  <TableView fx:id="activityTable" prefHeight="247.0" prefWidth="465.0" style="-fx-background-color: #000000;" styleClass="table-back">
                     <columns>
                       <TableColumn fx:id="nameColumn" prefWidth="181.0" text="Name" />
                       <TableColumn fx:id="distanceColumn" minWidth="0.0" prefWidth="96.0" text="Distance" />
@@ -85,10 +85,10 @@
                   </TableView>
                </children>
             </GridPane>
+            <VBox layoutX="482.0" layoutY="-58.0" prefHeight="406.0" prefWidth="5.0" styleClass="vbox-color" />
          </children>
       </AnchorPane>
-      <Button fx:id="history" layoutX="518.0" layoutY="225.0" mnemonicParsing="false" onAction="#openHistory" prefHeight="26.0" prefWidth="74.0" text="History" />
-      <VBox layoutX="501.0" layoutY="-4.0" prefHeight="400.0" prefWidth="18.0" />
-      <Label layoutX="545.0" layoutY="87.0" text="user" />
+      <Button fx:id="history" layoutX="491.0" layoutY="225.0" mnemonicParsing="false" onAction="#openHistory" prefHeight="26.0" prefWidth="108.0" styleClass="button-main" text="History" />
+      <Label layoutX="533.0" layoutY="87.0" styleClass="text-color" text="USER" />
    </children>
 </AnchorPane>
