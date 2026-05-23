@@ -61,9 +61,16 @@ public class EditController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        SportActivityApp app= SportActivityApp.getInstance();
+        Image image=app.getCurrentUser().getAvatar();
+        
+        imageAv.setImage(image);
+        
         cancel.setOnAction(this::cancelEdit);
         selAvatar.setOnAction(this::avatar);
         confirm.setOnAction(this::con);
+        
+        
     }    
 
     @FXML

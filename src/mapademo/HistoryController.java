@@ -72,7 +72,7 @@ public class HistoryController implements Initializable {
         
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
-
+    //we get all needed data for the table
     colStart.setCellValueFactory(cellData -> {
     String fechaFormateada = cellData.getValue().getStartTime().format(formatter);
     return new SimpleStringProperty(fechaFormateada);
@@ -98,7 +98,7 @@ public class HistoryController implements Initializable {
     colAnotations.setCellValueFactory(cellData -> 
         new SimpleIntegerProperty(cellData.getValue().getAnnotationsCreated())
     );
-    
+    //we add the data
     table.getItems().addAll(sessions);
 
     //calculate step by step duration #mins etc

@@ -75,6 +75,16 @@ public class MenuController implements Initializable {
             Image avatar = currentUser.getAvatar();
             if (avatar != null) {
                 profilePic.setImage(avatar);
+            }else{
+                try {
+        
+                    String imagePath = getClass().getResource("/resources/default_avatar.png").toExternalForm();
+        
+                    Image defaultAvatar = new Image(imagePath);
+                    profilePic.setImage(defaultAvatar);
+                }catch (Exception e) {
+                    System.out.println("ERROR");
+                }
             }
         }
         
