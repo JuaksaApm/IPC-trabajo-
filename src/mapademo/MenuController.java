@@ -57,16 +57,18 @@ public class MenuController implements Initializable {
     @FXML
     private Button newActivity;
     @FXML
+    private Button loadMap;
+    @FXML
     private Button history;
 
     /**
      * Initializes the controller class.
-     */
+     */ 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         logOut.setOnAction(this::logOut);
         edit.setOnAction(this::editProfile);
-        
+        loadMap.setOnAction(this::handleLoadMap);
         // Load the profile pic to main menu
         SportActivityApp app = SportActivityApp.getInstance();
         User currentUser = app.getCurrentUser();
@@ -127,7 +129,18 @@ public class MenuController implements Initializable {
             }
         });
     }    
-
+    private void handleLoadMap(ActionEvent event){
+        
+        try {
+            Parent mapaRoot = FXMLLoader.load(getClass().getResource("MapUpload.fxml"));
+            Stage stage = (Stage) loadMap.getScene().getWindow();
+            stage.setScene(new Scene(mapaRoot));
+            stage.show();
+        } catch (IOException e) {
+            System.out.println("Error while loading MapUpload screen");
+            e.printStackTrace();
+        }
+    }
     /**
      * Pulls historical activities from the SQLite database file, filters out duplicates,
      * and populates the visible TableView dashboard.

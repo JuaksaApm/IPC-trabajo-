@@ -14,7 +14,7 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<AnchorPane id="AnchorPane" prefHeight="403.0" prefWidth="603.0" styleClass="menu-background" stylesheets="@../resources/estilos.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mapademo.MenuController">
+<AnchorPane id="AnchorPane" prefHeight="403.0" prefWidth="603.0" styleClass="menu-background" stylesheets="@../resources/estilos.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mapademo.MenuController">
    <children>
       <Text fill="WHITE" layoutX="181.0" layoutY="24.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text-color" text="Main Menu" wrappingWidth="138.09808349609375">
          <font>
@@ -26,7 +26,7 @@
       <ImageView fx:id="profilePic" fitHeight="87.0" fitWidth="108.0" layoutX="502.0" pickOnBounds="true" preserveRatio="true" />
       <AnchorPane layoutY="50.0" prefHeight="350.0" prefWidth="486.0" style="-fx-background-color: #282626;">
          <children>
-            <Button layoutX="392.0" layoutY="12.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="87.0" style="-fx-background-color: #f87400;" styleClass="button-main" text="Load Map" textFill="WHITE">
+            <Button fx:id="loadMap" layoutX="392.0" layoutY="12.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="87.0" style="-fx-background-color: #f87400;" styleClass="button-main" text="Load Map" textFill="WHITE">
                <graphic>
                   <ImageView fitHeight="15.0" fitWidth="15.0" pickOnBounds="true" preserveRatio="true" rotate="-45.0">
                      <image>
