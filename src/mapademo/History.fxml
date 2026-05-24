@@ -9,9 +9,9 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 
-<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mapademo.HistoryController">
+<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="600.0" styleClass="menu-background" stylesheets="@../resources/estilos.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mapademo.HistoryController">
    <children>
-      <TableView fx:id="table" layoutY="42.0" prefHeight="358.0" prefWidth="490.0">
+      <TableView fx:id="table" layoutY="42.0" prefHeight="358.0" prefWidth="490.0" styleClass="table-back">
         <columns>
           <TableColumn fx:id="colStart" prefWidth="107.19997864961624" text="Start" />
           <TableColumn fx:id="colEnd" minWidth="0.0" prefWidth="115.20001220703125" text="End" />
@@ -26,7 +26,7 @@
       </TableView>
       <HBox alignment="CENTER" layoutX="-74.0" layoutY="14.0" prefHeight="22.0" prefWidth="600.0">
          <children>
-            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Session history" />
+            <Text fill="WHITE" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text-color" text="Session history" />
          </children>
       </HBox>
       <VBox layoutX="491.0" layoutY="-2.0" prefHeight="400.0" prefWidth="111.0">
@@ -34,17 +34,17 @@
             <HBox prefHeight="100.0" prefWidth="200.0" />
             <HBox prefHeight="100.0" prefWidth="200.0">
                <children>
-                  <Label fx:id="lblTotalDuration" text="Total time: 0min" />
+                  <Label fx:id="lblTotalDuration" styleClass="text-color" text="Total time: 0min" />
                </children>
             </HBox>
             <HBox prefHeight="100.0" prefWidth="200.0">
                <children>
-                  <Label fx:id="lblTotalImported" text="Total imported: 0" />
+                  <Label fx:id="lblTotalImported" styleClass="text-color" text="Total imported: 0" />
                </children>
             </HBox>
             <HBox alignment="BOTTOM_LEFT" prefHeight="100.0" prefWidth="200.0">
                <children>
-                  <Button fx:id="menubutt" mnemonicParsing="false" onAction="#backToMenu" prefHeight="26.0" prefWidth="154.0" text="Menu" />
+                  <Button fx:id="menubutt" mnemonicParsing="false" onAction="#backToMenu" prefHeight="26.0" prefWidth="154.0" styleClass="button-main" text="Menu" />
                </children>
             </HBox>
          </children>

@@ -118,3 +118,16 @@ S17.642,20.762,13.558,20.762z";
 .labelerr-color{
     -fx-text-fill: red;
 }
+
+.table-row-cell {
+    -fx-background-color: black; 
+}
+
+.table-cell {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #f87400; 
+}
