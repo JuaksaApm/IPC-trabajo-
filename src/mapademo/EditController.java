@@ -61,6 +61,7 @@ public class EditController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        
         SportActivityApp app= SportActivityApp.getInstance();
         Image image=app.getCurrentUser().getAvatar();
         if(image!=null){imageAv.setImage(image);}
@@ -87,7 +88,7 @@ public class EditController implements Initializable {
     
     private void cancelEdit(ActionEvent event){
         try{
-            //load the map if successful
+            //load the map 
         Parent mapaRoot = FXMLLoader.load(getClass().getResource("Menu.fxml"));
             //get the stage from the button
         Stage stage = (Stage) cancel.getScene().getWindow();    
@@ -115,24 +116,29 @@ public class EditController implements Initializable {
         // Guardamos la ruta absoluta que pide la librería
         rutaAvatar = archivoSeleccionado.getAbsolutePath();
         
-        // Opcional: mostrar la imagen en el ImageView para que quede bonito
+        // mostrar la imagen en el ImageView 
         Image image = new Image(archivoSeleccionado.toURI().toString());
         imageAv.setImage(image);
         }
      }
     
     private void con(ActionEvent event){
+        errBDay.setText("");
+        errEmail.setText("");
+        errPass.setText("");
         
         SportActivityApp app=SportActivityApp.getInstance();
         User currentUser=app.getCurrentUser();
         
+        boolean hasError = false;
         String newPassword=password.getText();
         
         if(newPassword.isEmpty()){
         newPassword=currentUser.getPassword();
         }else if(!User.checkPassword(newPassword)){
-        errPass.setText("Invalid Password");
-        return;
+        errPass.setText("8 to 20 characters, with at least one uppercase & lowercase letter," +
+        "one digit and one symbol");
+        hasError = true;
         }
         
         String newEmail=email.getText();
@@ -140,16 +146,16 @@ public class EditController implements Initializable {
         if(newEmail.isEmpty()){
         newEmail=currentUser.getEmail();
         }else if(!User.checkEmail(newEmail)){
-        errEmail.setText("Invalid Email");
-        return;
+        errEmail.setText("use valid user@domain format");
+        hasError = true;
         }
         
         LocalDate newBDay=birthD.getValue();
         if(newBDay==null){
         newBDay = currentUser.getBirthDate();
         }else if (!User.isOlderThan(newBDay, 12)) {
-        errBDay.setText("You must be ove 12 years old");
-        return;
+        errBDay.setText("You must be atleast 12 years old");
+        hasError = true;
         }
         
         String newAv=rutaAvatar;
@@ -157,8 +163,9 @@ public class EditController implements Initializable {
         newAv = currentUser.getAvatarPath();
         }
         
-        app.updateCurrentUser(newEmail, newPassword, newBDay, newAv);
+        if(hasError){return;}
         
+        app.updateCurrentUser(newEmail, newPassword, newBDay, newAv);
         cancelEdit(event);
     }
 
