@@ -438,6 +438,7 @@ public class ActivityMenuController implements Initializable {
             if (selected == null) return;
             SportActivityApp.getInstance().removeAnnotation(selected);
             map_annotations_listview.getItems().remove(selected);
+            map_annotations_listview.getSelectionModel().clearSelection();
             reloadAnnotationsOnMap();
         });
         map_annotations_listview.setContextMenu(new ContextMenu(miRemove));
@@ -929,7 +930,7 @@ public class ActivityMenuController implements Initializable {
     private void reloadAnnotationsOnMap() {
         mapPane.getChildren().removeAll(annotationNodes);
         annotationNodes.clear();
-        for (Annotation ann : currentActivity.getAnnotations()) {
+        for (Annotation ann : map_annotations_listview.getItems()) {
             renderSingleAnnotation(ann);
         }
     }
