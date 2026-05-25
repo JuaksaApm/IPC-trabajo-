@@ -63,6 +63,8 @@ public class MenuController implements Initializable {
     private Button history;
     @FXML
     private Button MonStats;
+    @FXML
+    private ImageView mascot;
 
     /**
      * Initializes the controller class.
@@ -73,6 +75,16 @@ public class MenuController implements Initializable {
         edit.setOnAction(this::editProfile);
         loadMap.setOnAction(this::handleLoadMap);
         MonStats.setOnAction(this::handleMonStats);
+        
+        try {
+        
+                    String imagePath = getClass().getResource("/resources/patatrack.png").toExternalForm();
+        
+                    Image defaultAvatar = new Image(imagePath);
+                    mascot.setImage(defaultAvatar);
+                }catch (Exception e) {
+                    System.out.println("ERROR");
+                }
         // Load the profile pic to main menu
         SportActivityApp app = SportActivityApp.getInstance();
         User currentUser = app.getCurrentUser();
