@@ -28,6 +28,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import upv.ipc.sportlib.SportActivityApp;
@@ -111,6 +112,7 @@ public class UploadMapController implements Initializable {
         NameFile.setText(currFile.getName());
     }
     private void handleLoad(ActionEvent event){
+        NameFile.setTextFill(Color.WHITE);
         errMaxLat.setText("");
         errMinLat.setText("");
         errMaxLon.setText("");
@@ -174,6 +176,7 @@ public class UploadMapController implements Initializable {
            }
         }
         if(currFile == null){
+            NameFile.setTextFill(Color.RED);
             NameFile.setText("Must input file of type .jpg.");
             failed = true;
         }
