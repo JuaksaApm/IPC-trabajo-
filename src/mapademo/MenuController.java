@@ -119,27 +119,13 @@ public class MenuController implements Initializable {
             if (event.getClickCount() == 2) {
                 GpxActivity selectedActivity = activityTable.getSelectionModel().getSelectedItem();
                 if (selectedActivity != null) {
-                    Activity activityData = null;
-                    
-                    // Match the row selection against database history to prevent duplicate files 
-                    if (currentUser != null) {
-                        for (Activity act : app.getUserActivities()) {
-                            if (act.getName().equals(selectedActivity.getName())) {
-                                activityData = act;
-                                break;
-                            }
-                        }
-                    }
-                    
-                    // Fallback to direct library parsing if it's a completely new file 
-                    if (activityData == null && selectedActivity.getFile() != null) {
-                        activityData = app.importActivity(selectedActivity.getFile());
-                    }
+                    // Instantly pull the exact object from memory, no O(n) string searching
+                    Activity activityData = selectedActivity.getActivityRef();
                     
                     if (activityData != null) {
                         openGpxViewerScreen(activityData);
                     } else {
-                        System.err.println("Could not parse or persist the GPX activity data.");
+                        System.err.println("Critical Error: Raw Activity reference lost.");
                     }
                 }
             }
@@ -171,44 +157,30 @@ public class MenuController implements Initializable {
         activityTable.getItems().clear();
         
         if (app.getCurrentUser() != null) {
-            // Extract the user activity tracking array list directly from database persistence models 
-            for (Activity act : app.getUserActivities()) {
-                
-                // DUPLICATE GUARD: If this activity name is already visible in the table list, skip it!
-                boolean alreadyExists = false;
-                for (GpxActivity row : activityTable.getItems()) {
-                    if (row.getName().equals(act.getName())) {
-                        alreadyExists = true;
-                        break;
-                    }
-                }
-                
-                if (alreadyExists) {
-                    continue; // Skip this loop iteration to prevent visual duplicates
-                }
-                
-                // Format total distance metrics from base meters back to readable UI strings
+            for (Activity act : app.getActivitiesByUser(app.getCurrentUser())) {
                 double distKm = act.getTotalDistance() / 1000.0;
                 String formattedDistance = String.format("%.2f km", distKm);
                 
-                // Format elapsed time duration models [cite: 209]
-                long s = act.getDuration().getSeconds();
+                long s = 0;
+                if (act.getDuration() != null) {
+                    s = act.getDuration().getSeconds();
+                }
                 String formattedTime = String.format("%02d:%02d:%02d", s / 3600, (s % 3600) / 60, s % 60);
                 
-                // Format starting date details cleanly using the localized timezone offset fix
                 String formattedDate = "--/--/----";
                 if (act.getStartTime() != null) {
                     Date startDate = Date.from(act.getStartTime().atZone(java.time.ZoneId.systemDefault()).toInstant());
                     formattedDate = new SimpleDateFormat("dd/MM/yyyy").format(startDate);
                 }
                 
-                // Wrap data parameters and append row straight into TableView items list
+                // Add row and pass the raw Activity object directly
                 GpxActivity historicalRow = new GpxActivity(
                     act.getName(),
                     formattedDistance, 
                     formattedTime, 
                     formattedDate, 
-                    null // File reference is safely stored inside SQLite
+                    null,
+                    act 
                 );
                 activityTable.getItems().add(historicalRow);
             }
@@ -267,42 +239,13 @@ public class MenuController implements Initializable {
             return;
         }
 
-        if (selectedGpx != null) {
-            // Pass the file to the database library tool to parse and persist it
-            Activity registered = SportActivityApp.getInstance().importActivity(selectedGpx);
-            
-            if (registered != null) {
-                // Safeguard against table visual duplicates before appending
-                boolean alreadyExists = false;
-                for (GpxActivity row : activityTable.getItems()) {
-                    if (row.getName().equals(registered.getName())) {
-                        alreadyExists = true;
-                        break;
-                    }
-                }
-                
-                if (!alreadyExists) {
-                    refreshMenuActivityTable();
-                }
-            } else {
-                // Local extractor fallback parsing logic if database registration drops
-                String fullName = selectedGpx.getName();
-                String cleanName = fullName.substring(0, fullName.length() - 4);
-                
-                boolean alreadyExists = false;
-                for (GpxActivity row : activityTable.getItems()) {
-                    if (row.getName().equals(cleanName)) {
-                        alreadyExists = true;
-                        break;
-                    }
-                }
-                
-                if (!alreadyExists) {
-                    GpxMetadataExtractor.Metadata data = GpxMetadataExtractor.extract(selectedGpx);
-                    GpxActivity newActivity = new GpxActivity(cleanName, data.distance, data.time, data.date, selectedGpx);
-                    activityTable.getItems().add(newActivity);
-                }
-            }
+        Activity registered = SportActivityApp.getInstance().importActivity(selectedGpx);
+        
+        if (registered != null) {
+            // Nuke the duplicate check. Always refresh to reflect the database reality.
+            refreshMenuActivityTable();
+        } else {
+            showInvalidGpxAlert("Could not parse or persist the GPX activity data.");
         }
     }
 
@@ -424,19 +367,21 @@ public class MenuController implements Initializable {
     /**
      * Wrapper class for table row display elements.
      */
-    public class GpxActivity {
+    public static class GpxActivity {
         private final String name;
         private final String distance;
         private final String time;
         private final String date;
         private final File file;
+        private final Activity activityRef; 
 
-        public GpxActivity(String name, String distance, String time, String date, File file) {
+        public GpxActivity(String name, String distance, String time, String date, File file, Activity activityRef) {
             this.name = name;
             this.distance = distance;
             this.time = time;
             this.date = date;
             this.file = file;
+            this.activityRef = activityRef;
         }
 
         public String getName() { return name; }
@@ -444,6 +389,7 @@ public class MenuController implements Initializable {
         public String getTime() { return time; }
         public String getDate() { return date; }
         public File getFile() { return file; }
+        public Activity getActivityRef() { return activityRef; }
     }
    
     /**

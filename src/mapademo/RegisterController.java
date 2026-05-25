@@ -97,60 +97,58 @@ public class RegisterController implements Initializable {
         email_err.setText("");
         birth_err.setText("");
         
-        String password=passwordReg.getText();
-        String username=userReg.getText();
-        String emailUser=email.getText();
-        LocalDate birthD=birthDate.getValue();
+        String password = passwordReg.getText();
+        String username = userReg.getText();
+        String emailUser = email.getText();
+        LocalDate birthD = birthDate.getValue();
         
-        if(password.isEmpty()||username.isEmpty()||emailUser.isEmpty()||birthD==null){
-        ErrorReg.setText("Please fill all mandatory fields");
-        return;
+        if(password.isEmpty() || username.isEmpty() || emailUser.isEmpty() || birthD == null){
+            ErrorReg.setText("Please fill all mandatory fields");
+            return;
         }
+
+        boolean hasError = false;
         
         if(!User.checkNickName(username)){
-        user_err.setText("Nick must be 6-15 characters ,letters ,digits ,hyphen or underscore only");
-        
+            user_err.setText("Nick must be 6-15 characters, letters, digits, hyphen or underscore only");
+            hasError = true;
         }
         
-        
         if(!User.checkPassword(password)){
-        pass_err.setText(" 8 to 20 characters, with at least one uppercase & lowercase letter," +
-        "one digit and one symbol");
-        
+            pass_err.setText("8 to 20 characters, with at least one uppercase & lowercase letter, one digit and one symbol");
+            hasError = true;
         }
         
         if(!User.checkEmail(emailUser)){
-        email_err.setText(" valid user@domain format");
-        
+            email_err.setText("Use valid user@domain format");
+            hasError = true;
         }
         
-        if(!User.isOlderThan(birthD,12)){
-        birth_err.setText("the user must be atleast 12 years old");
-        
+        if(!User.isOlderThan(birthD, 12)){
+            birth_err.setText("The user must be at least 12 years old");
+            hasError = true;
         }
         
-         SportActivityApp app=SportActivityApp.getInstance();
+        if (hasError) return;
+
+        SportActivityApp app = SportActivityApp.getInstance();
+        boolean reg = app.registerUser(username, emailUser, password, birthD, rutaAvatar);
          
-         boolean reg=app.registerUser(username, emailUser, password, birthD, rutaAvatar);
-         
-         if(reg){
-         ErrorReg.setText("Successful operation");
-         try{
-             //load the log in screen 
-             Parent mapaRoot = FXMLLoader.load(getClass().getResource("logIn.fxml"));
-             //get the stage from the button
-             Stage stage = (Stage) register.getScene().getWindow();
-             //change scene
-            Scene scene = new Scene(mapaRoot);
-            stage.setScene(scene);
-            stage.show();
-         }catch(IOException e){
-         System.out.println("Error while laoding main screen");
-         e.printStackTrace();
-         }
-         }else{
-         ErrorReg.setText("Problem with registration");
-         }
+        if(reg){
+            ErrorReg.setText("Successful operation");
+            try{
+                Parent mapaRoot = FXMLLoader.load(getClass().getResource("logIn.fxml"));
+                Stage stage = (Stage) register.getScene().getWindow();
+                Scene scene = new Scene(mapaRoot);
+                stage.setScene(scene);
+                stage.show();
+            } catch(IOException e){
+                System.out.println("Error while loading main screen");
+                e.printStackTrace();
+            }
+        } else {
+            ErrorReg.setText("Problem with registration");
+        }
      }
      
      private void avatar(ActionEvent event) {
