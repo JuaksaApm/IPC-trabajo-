@@ -95,7 +95,6 @@ public class UploadMapController implements Initializable {
             stage.show();
         } catch (IOException e) {
             System.out.println("Error while loading Menu screen");
-            e.printStackTrace();
         }
     }
     private void handleSelect(ActionEvent event){

@@ -105,7 +105,6 @@ public class EditController implements Initializable {
         stage.show();
         }catch(IOException e){
         System.out.println("Error while loading");
-        e.printStackTrace();
         }
     }
     

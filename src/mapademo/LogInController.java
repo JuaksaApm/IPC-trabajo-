@@ -76,8 +76,7 @@ public class LogInController implements Initializable {
         stage.setScene(scene);
         stage.show();
         }catch(IOException e){
-        System.out.println("Soy error IOException en LogInController.java");
-        e.printStackTrace();
+        System.out.println("error IOException en LogInController.java");
         }
         }else{
         idkerr.setText("Invalid nickname or password");
@@ -98,7 +97,6 @@ public class LogInController implements Initializable {
         stage.show();
        }catch(IOException e){
        System.out.println("Error while loading map");
-       e.printStackTrace();
        }
     }
 

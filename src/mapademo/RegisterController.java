@@ -144,7 +144,6 @@ public class RegisterController implements Initializable {
                 stage.show();
             } catch(IOException e){
                 System.out.println("Error while loading main screen");
-                e.printStackTrace();
             }
         } else {
             ErrorReg.setText("Problem with registration");
@@ -187,7 +186,6 @@ public class RegisterController implements Initializable {
             stage.show();
          }catch(IOException e){
          System.out.println("Error while laoding main screen");
-         e.printStackTrace();
          }
          
     }

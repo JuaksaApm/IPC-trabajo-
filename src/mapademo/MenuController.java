@@ -82,33 +82,28 @@ public class MenuController implements Initializable {
             Image avatar = currentUser.getAvatar();
             if (avatar != null) {
                 profilePic.setImage(avatar);
-            }else{
-                try {
-        
-                    String imagePath = getClass().getResource("/resources/default_avatar.png").toExternalForm();
-        
-                    Image defaultAvatar = new Image(imagePath);
+            } else {
+                URL resourceUrl = getClass().getResource("/resources/default_avatar.png");
+                if (resourceUrl != null) {
+                    Image defaultAvatar = new Image(resourceUrl.toExternalForm());
                     profilePic.setImage(defaultAvatar);
-                }catch (Exception e) {
-                    System.out.println("ERROR");
+                } else {
+                    System.err.println("ERROR: Default avatar image not found in classpath.");
                 }
             }
         }
         
-        // Link table data column attributes to GpxActivity properties
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
         distanceColumn.setCellValueFactory(new PropertyValueFactory<>("distance"));
         timeColumn.setCellValueFactory(new PropertyValueFactory<>("time"));
         dateColumn.setCellValueFactory(new PropertyValueFactory<>("date"));
         
-        // Automatically populate the TableView with historical data on launch 
         refreshMenuActivityTable();
         
         activityTable.setOnMouseClicked((MouseEvent event) -> {
             if (event.getClickCount() == 2) {
                 GpxActivity selectedActivity = activityTable.getSelectionModel().getSelectedItem();
                 if (selectedActivity != null) {
-                    // Instantly pull the exact object from memory, no O(n) string searching
                     Activity activityData = selectedActivity.getActivityRef();
                     
                     if (activityData != null) {
@@ -120,12 +115,29 @@ public class MenuController implements Initializable {
             }
         });
         
+        javafx.scene.control.ContextMenu contextMenu = new javafx.scene.control.ContextMenu();
+        javafx.scene.control.MenuItem deleteItem = new javafx.scene.control.MenuItem("Delete Activity");
+        
+        deleteItem.setOnAction(event -> {
+            GpxActivity selected = activityTable.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                SportActivityApp.getInstance().removeActivity(selected.getActivityRef());
+                refreshMenuActivityTable();
+            }
+        });
+        
+        contextMenu.getItems().add(deleteItem);
+        activityTable.setContextMenu(contextMenu);
+        
         Platform.runLater(() -> {
-        Stage stage = (Stage) logOut.getScene().getWindow();
-        stage.setMinWidth(615);
-        stage.setMinHeight(440);
-    });
-    }    
+            Stage stage = (Stage) logOut.getScene().getWindow();
+            if (stage != null) {
+                stage.setMinWidth(615);
+                stage.setMinHeight(440);
+            }
+        });
+    }
+    
     private void handleLoadMap(ActionEvent event){
         
         try {
@@ -137,6 +149,7 @@ public class MenuController implements Initializable {
             System.out.println("Error while loading MapUpload screen");
         }
     }
+    
     /**
      * Pulls historical activities from the SQLite database file, filters out duplicates,
      * and populates the visible TableView dashboard.

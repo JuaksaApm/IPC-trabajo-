@@ -1,8 +1,5 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/javafx/FXMLController.java to edit this template
- */
 package mapademo;
+
 import java.io.IOException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -10,6 +7,8 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import java.net.URL;
 import java.text.DecimalFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.ResourceBundle;
 import javafx.application.Platform;
@@ -39,7 +38,6 @@ public class CumulativeTotalsController implements Initializable {
     @FXML
     private Button goBack;
     
-    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         goBack.setOnAction(this::handleGoBack);
@@ -50,10 +48,18 @@ public class CumulativeTotalsController implements Initializable {
         double timeSeconds = 0.0;
         double dist = 0.0;
         double des = 0.0;
+        
+        // Boundaries for the current month to satisfy Scenario 4.4
+        LocalDateTime curr = LocalDateTime.now(ZoneId.of("Europe/Madrid"));
+        LocalDateTime bef = curr.minusMonths(1);
 
-        // Nuked the 1-month date filter so your old GPX files actually get tallied
-        for(Activity a : list){
-            if (a.getDuration() == null) continue; // Protect against NPEs for bad GPX headers
+        for(Activity a : list) {
+            var a_time = a.getEndTime();
+            
+            // Protect against NPEs for bad GPX headers AND enforce the 1-month boundary
+            if (a.getDuration() == null || a_time == null || a_time.compareTo(bef) < 0 || a_time.compareTo(curr) > 0) {
+                continue; 
+            }
             
             asc += a.getElevationGain();
             des += a.getElevationLoss();
@@ -69,12 +75,14 @@ public class CumulativeTotalsController implements Initializable {
         
         Platform.runLater(() -> {
             Stage stage = (Stage) goBack.getScene().getWindow();
-            stage.setMinWidth(630);
-            stage.setMinHeight(240);
+            if (stage != null) {
+                stage.setMinWidth(630);
+                stage.setMinHeight(240);
+            }
         });
     }
     
-    private void handleGoBack(ActionEvent event){
+    private void handleGoBack(ActionEvent event) {
         try {
             Parent mapaRoot = FXMLLoader.load(getClass().getResource("Menu.fxml"));
             Stage stage = (Stage) goBack.getScene().getWindow();
