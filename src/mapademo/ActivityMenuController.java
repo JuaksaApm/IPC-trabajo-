@@ -83,6 +83,14 @@ import java.util.ArrayList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.application.Platform;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
+import javafx.scene.control.CheckBox;
+import javafx.scene.layout.HBox;
+import javafx.scene.shape.Line;
+import javafx.scene.shape.Rectangle;
 
 /**
  * Controlador principal de la aplicación de mapa con POIs.
@@ -192,6 +200,36 @@ public class ActivityMenuController implements Initializable {
     private Label lblMaxAltitude;
     @FXML
     private Label lblMinAltitude;
+    
+    // =========================================================
+    // Implementation for the point 6
+    // =========================================================
+
+    // 6.1 – Elevation profile
+    @FXML
+    private LineChart<Number, Number> elevationChart;
+
+    @FXML
+    private Label elevationLabel;
+
+    // 6.2 – Speed over the route
+    @FXML
+    private CheckBox showSpeedOverlay;
+
+    @FXML
+    private HBox speedLegendBox;
+
+    @FXML
+    private Label segmentDetailsLabel;
+
+    // Internal state
+    private final List<RouteSample> elevationSamples = new ArrayList<>();
+    private final List<Double> segmentSpeeds = new ArrayList<>();
+    private double minSegmentSpeedKmh = Double.POSITIVE_INFINITY;
+    private double maxSegmentSpeedKmh = Double.NEGATIVE_INFINITY;
+    private Circle elevationHoverMarker;
+    private final List<Line> speedOverlayLines = new ArrayList<>();
+
 
     // =========================================================
     //  MANEJADORES DE ZOOM
@@ -468,6 +506,33 @@ public class ActivityMenuController implements Initializable {
                 centerMapOnCoordinates(pixel.getX(), pixel.getY());
             }
         });
+        
+        // =========================================================
+        // 6.1 - Elevation profile 
+        // =========================================================
+
+        if (elevationChart != null) {
+            elevationChart.setCreateSymbols(false);
+            elevationChart.setLegendVisible(false);
+        }
+
+        if (elevationLabel != null) {
+            elevationLabel.setText("Move the mouse over the profile to inspect the route");
+        }
+
+        // =========================================================
+        // 6.2 - Speed over the route
+        // =========================================================
+
+        if (showSpeedOverlay != null) {
+            showSpeedOverlay.selectedProperty().addListener((obs, wasOn, isOn) -> {
+                speedOverlayLines.forEach(line -> line.setVisible(isOn));
+                if (speedLegendBox != null) speedLegendBox.setVisible(isOn);
+                if (segmentDetailsLabel != null) {
+                    segmentDetailsLabel.setText(isOn ? "Place the mouse cursor in a segment of the route to see the speed for that segment" : "");
+                }
+            });
+        }
     }
 
     // =========================================================
@@ -766,6 +831,19 @@ public class ActivityMenuController implements Initializable {
             renderSingleAnnotation(ann);
             map_annotations_listview.getItems().add(ann);
         }
+
+        // Reset speed overlay state for the new activity
+        speedOverlayLines.clear();
+        if (showSpeedOverlay != null) showSpeedOverlay.setSelected(false);
+        if (segmentDetailsLabel != null) segmentDetailsLabel.setText("");
+
+        // 6.1 & 6.2 – Defer until JavaFX has done a layout pass so
+        // mapPane.getWidth()/getHeight() return real values (not 0.0).
+        final Activity activityRef = activity;
+        Platform.runLater(() -> {
+            initializeElevationProfile(activityRef.getTrackPoints());
+            initializeSpeedOverlay(activityRef.getTrackPoints());
+        });
     }
 
     /**
@@ -988,6 +1066,324 @@ public class ActivityMenuController implements Initializable {
                 geographicArea.setStrokeWidth(ann.getStrokeWidth());
                 mapPane.getChildren().add(geographicArea);
                 break;
+        }
+    }
+    
+    // =========================================================
+    // Elevation Profile
+    // =========================================================
+    private void ensureElevationHoverMarker() {
+        if (mapPane == null) return;
+
+        if (elevationHoverMarker == null) {
+            elevationHoverMarker = new Circle(6, Color.ORANGE);
+            elevationHoverMarker.setStroke(Color.BLACK);
+            elevationHoverMarker.setStrokeWidth(1.5);
+            elevationHoverMarker.setVisible(false);
+            mapPane.getChildren().add(elevationHoverMarker);
+        } else if (!mapPane.getChildren().contains(elevationHoverMarker)) {
+            elevationHoverMarker.setVisible(false);
+            mapPane.getChildren().add(elevationHoverMarker);
+        }
+    }
+    
+    private static class RouteSample {
+        private final Point2D pixel;
+        private final double cumulativeKm;
+        private final double altitudeMeters;
+
+        private RouteSample(Point2D pixel,
+                            double cumulativeKm,
+                            double altitudeMeters) {
+            this.pixel = pixel;
+            this.cumulativeKm = cumulativeKm;
+            this.altitudeMeters = altitudeMeters;
+        }
+    }
+
+    /**
+     * Build the elevation samples by converting the list of TrackPoints in a RouteSample list computing:
+     * - coordinates in the map
+     * - the accumulated distance
+     * - altitude
+     *
+     * In the same pass, the segment speeds are cached so the speed overlay
+     * does not need to recompute route geometry again.
+     */
+    private void buildElevationSamples(List<TrackPoint> points, MapProjection projection) {
+        elevationSamples.clear();
+        segmentSpeeds.clear();
+        minSegmentSpeedKmh = Double.POSITIVE_INFINITY;
+        maxSegmentSpeedKmh = Double.NEGATIVE_INFINITY;
+
+        if (points == null || points.size() < 2 || projection == null) {
+            return;
+        }
+
+        double cumulativeKm = 0.0;
+        TrackPoint previous = null;
+
+        for (int i = 0; i < points.size(); i++) {
+            TrackPoint current = points.get(i);
+
+            Point2D pixel = projection.project(current);
+            double altitude = current.getElevation();
+
+            if (previous != null) {
+                double speedKmh = segmentSpeedKmh(previous, current);
+                long seconds = java.time.Duration.between(previous.getTime(), current.getTime()).getSeconds();
+
+                if (seconds > 0 && speedKmh > 0.0) {
+                    cumulativeKm += speedKmh * (seconds / 3600.0);
+                    minSegmentSpeedKmh = Math.min(minSegmentSpeedKmh, speedKmh);
+                    maxSegmentSpeedKmh = Math.max(maxSegmentSpeedKmh, speedKmh);
+                }
+
+                segmentSpeeds.add(speedKmh);
+            }
+
+            elevationSamples.add(
+                new RouteSample(pixel, cumulativeKm, altitude)
+            );
+
+            previous = current;
+        }
+
+        if (minSegmentSpeedKmh == Double.POSITIVE_INFINITY) {
+            minSegmentSpeedKmh = 0.0;
+            maxSegmentSpeedKmh = 0.0;
+        }
+    }
+
+    private void populateElevationChart() { // to draw the samples in the graph
+        if (elevationChart == null) return;
+
+        elevationChart.getData().clear();
+
+        XYChart.Series<Number, Number> series = new XYChart.Series<>();
+
+        for (RouteSample sample : elevationSamples) {
+            series.getData().add(
+                new XYChart.Data<>(sample.cumulativeKm, sample.altitudeMeters)
+            );
+        }
+
+        elevationChart.getData().add(series);
+
+        elevationChart.setOnMouseMoved(this::handleElevationChartHover);
+        elevationChart.setOnMouseExited(event -> {
+            if (elevationHoverMarker != null) {
+                elevationHoverMarker.setVisible(false);
+            }
+
+            if (elevationLabel != null) {
+                elevationLabel.setText("");
+            }
+        });
+    }
+
+    /**
+     * Busca la muestra cuya distancia acumulada esté más cerca
+     * del valor X del gráfico.
+     *
+     * The samples are generated in route order, so a binary search is enough.
+     */
+    private RouteSample findNearestSampleByKm(double km) {
+        if (elevationSamples.isEmpty()) return null;
+
+        int lo = 0;
+        int hi = elevationSamples.size() - 1;
+
+        while (lo < hi) {
+            int mid = (lo + hi) >>> 1;
+            if (elevationSamples.get(mid).cumulativeKm < km) {
+                lo = mid + 1;
+            } else {
+                hi = mid;
+            }
+        }
+
+        if (lo == 0) return elevationSamples.get(0);
+        if (lo >= elevationSamples.size()) return elevationSamples.get(elevationSamples.size() - 1);
+
+        RouteSample right = elevationSamples.get(lo);
+        RouteSample left = elevationSamples.get(lo - 1);
+
+        return (Math.abs(left.cumulativeKm - km) <= Math.abs(right.cumulativeKm - km))
+                ? left : right;
+    }
+
+    /**
+     * Get the mouse position and translate to coordinates over the map.
+     */
+    private void handleElevationChartHover(MouseEvent event) {
+        if (elevationSamples.isEmpty()) return;
+        if (!(elevationChart.getXAxis() instanceof NumberAxis)) return;
+
+        NumberAxis xAxis = (NumberAxis) elevationChart.getXAxis();
+
+        Point2D axisLocal = xAxis.sceneToLocal(event.getSceneX(), event.getSceneY());
+        Number xValue = xAxis.getValueForDisplay(axisLocal.getX());
+
+        if (xValue == null) return;
+
+        RouteSample nearest = findNearestSampleByKm(xValue.doubleValue());
+        if (nearest == null) return;
+
+        ensureElevationHoverMarker();
+
+        elevationHoverMarker.setCenterX(nearest.pixel.getX());
+        elevationHoverMarker.setCenterY(nearest.pixel.getY());
+        elevationHoverMarker.setVisible(true);
+
+        if (elevationLabel != null) {
+            elevationLabel.setText(String.format(
+                "Distancia: %.2f km | Altitud: %.0f m",
+                nearest.cumulativeKm, nearest.altitudeMeters
+            ));
+        }
+    }
+
+    private void initializeElevationProfile(List<TrackPoint> trackPoints) {
+        if (currentActivity == null || mapPane == null || trackPoints == null || trackPoints.size() < 2) {
+            return;
+        }
+
+        // Scene Builder always creates a LineChart with CategoryAxis on X.
+        // We need NumberAxis on both axes for numeric km/altitude data.
+        // Fix it at runtime so the FXML never needs to be hand-edited.
+        if (!(elevationChart.getXAxis() instanceof NumberAxis)) {
+            NumberAxis numX = new NumberAxis();
+            numX.setLabel("Distance (km)");
+            numX.setTickLabelFill(Color.WHITE);
+            numX.setAutoRanging(true);
+
+            NumberAxis numY = new NumberAxis();
+            numY.setLabel("Altitude (m)");
+            numY.setTickLabelFill(Color.WHITE);
+            numY.setAutoRanging(true);
+
+            LineChart<Number, Number> fixed = new LineChart<>(numX, numY);
+            fixed.setCreateSymbols(false);
+            fixed.setLegendVisible(false);
+            fixed.setPrefWidth(elevationChart.getPrefWidth());
+            fixed.setPrefHeight(elevationChart.getPrefHeight());
+
+            // Preserve layout constraints (VBox.vgrow, etc.)
+            javafx.scene.layout.VBox.setVgrow(fixed,
+                javafx.scene.layout.VBox.getVgrow(elevationChart));
+
+            // Swap in the parent container
+            javafx.scene.layout.Pane parent =
+                (javafx.scene.layout.Pane) elevationChart.getParent();
+            int idx = parent.getChildren().indexOf(elevationChart);
+            parent.getChildren().set(idx, fixed);
+            elevationChart = fixed;
+
+            // Axis title labels ("Distance (km)", "Altitude (m)") are internal
+            // Text nodes only reachable via CSS lookup after the chart is in the scene.
+            Platform.runLater(() ->
+                elevationChart.lookupAll(".axis-label").forEach(node ->
+                    node.setStyle("-fx-text-fill: white;"))
+            );
+        }
+
+        MapRegion region = currentActivity.getSuggestedMap();
+        MapProjection projection = new MapProjection(region, mapPane.getWidth(), mapPane.getHeight());
+
+        buildElevationSamples(trackPoints, projection);
+        populateElevationChart();
+    }
+
+    // =========================================================
+    // Speed over the route
+    // =========================================================
+
+    /**
+     * Calculates speed in km/h between two consecutive TrackPoints.
+     * Reuses the TrackPoint helper already provided by the library.
+     */
+    private double segmentSpeedKmh(TrackPoint a, TrackPoint b) {
+        if (a == null || b == null) return 0.0;
+        return Math.max(0.0, a.speedTo(b));
+    }
+
+    /**
+     * Interpola un color entre rojo (lento) → amarillo → verde (rápido)
+     * según la velocidad relativa al rango de la actividad.
+     */
+    private Color speedToColor(double speed, double minSpeed, double maxSpeed) {
+        if (maxSpeed <= minSpeed) return Color.YELLOW;
+        double t = (speed - minSpeed) / (maxSpeed - minSpeed); // 0 = slow, 1 = fast
+        double r = Math.max(0, 1.0 - 2 * t);
+        double g = Math.min(1.0, 2 * t);
+        return new Color(r, g, 0, 1.0);
+    }
+
+    /**
+     * Construye los segmentos de línea coloreados por velocidad,
+     * los superpone al mapa, y rellena la leyenda y el resumen.
+     *
+     * Los segmentos empiezan ocultos; el CheckBox los muestra/oculta.
+     */
+    private void initializeSpeedOverlay(List<TrackPoint> points) {
+        if (currentActivity == null || mapPane == null || points == null || points.size() < 2) return;
+        if (elevationSamples.size() < 2 || segmentSpeeds.size() < 1) return;
+
+        if (!speedOverlayLines.isEmpty()) {
+            mapPane.getChildren().removeAll(speedOverlayLines);
+            speedOverlayLines.clear();
+        }
+
+        final double finalMin = minSegmentSpeedKmh;
+        final double finalMax = maxSegmentSpeedKmh;
+
+        // 2. Dibujar un Line coloreado por tramo usando la geometría ya calculada
+        for (int i = 0; i < segmentSpeeds.size() && (i + 1) < elevationSamples.size(); i++) {
+            RouteSample from = elevationSamples.get(i);
+            RouteSample to = elevationSamples.get(i + 1);
+
+            Line seg = new Line(from.pixel.getX(), from.pixel.getY(), to.pixel.getX(), to.pixel.getY());
+            seg.setStrokeWidth(4.0);
+            seg.setStroke(speedToColor(segmentSpeeds.get(i), finalMin, finalMax));
+            seg.setVisible(false);
+
+            final double segSpeed = segmentSpeeds.get(i);
+            final int segIdx = i + 1;
+            seg.setOnMouseEntered(e -> {
+                if (segmentDetailsLabel != null)
+                    segmentDetailsLabel.setText(
+                        String.format("Segment %d — %.1f km/h", segIdx, segSpeed));
+            });
+            seg.setOnMouseExited(e -> {
+                if (segmentDetailsLabel != null)
+                    segmentDetailsLabel.setText("Move your mouse over the route to see the speed for each segment");
+            });
+
+            mapPane.getChildren().add(seg);
+            speedOverlayLines.add(seg);
+        }
+
+        // 3. Legend (hidden until the checkbox is enabled)
+        if (speedLegendBox != null) {
+            speedLegendBox.getChildren().clear();
+            speedLegendBox.setSpacing(0);
+            speedLegendBox.setVisible(false);
+            int swatches = 20;
+            Label slowLbl = new Label(String.format(" %.1f", finalMin));
+            slowLbl.setStyle("-fx-font-size: 10px;");
+            slowLbl.setTextFill(Color.WHITE);
+            speedLegendBox.getChildren().add(slowLbl);
+            for (int s = 0; s < swatches; s++) {
+                double t = (double) s / (swatches - 1);
+                Rectangle swatch = new Rectangle(9, 14);
+                swatch.setFill(speedToColor(finalMin + t * (finalMax - finalMin), finalMin, finalMax));
+                speedLegendBox.getChildren().add(swatch);
+            }
+            Label fastLbl = new Label(String.format(" %.1f km/h", finalMax));
+            fastLbl.setStyle("-fx-font-size: 10px;");
+            fastLbl.setTextFill(Color.WHITE);
+            speedLegendBox.getChildren().add(fastLbl);
         }
     }
 
