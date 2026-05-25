@@ -42,8 +42,6 @@ public class LogInController implements Initializable {
     private Hyperlink regUser;
     @FXML
     private Label idkerr;
-    @FXML
-    private ImageView mascot;
 
     /**
      * Initializes the controller class.
@@ -52,18 +50,6 @@ public class LogInController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         clickLogIn.setOnAction(this::handleLogIn);
         regUser.setOnAction(this::goToReg);
-        
-        try {
-        
-                    String imagePath = getClass().getResource("/resources/patatrack.png").toExternalForm();
-        
-                    Image defaultAvatar = new Image(imagePath);
-                    mascot.setImage(defaultAvatar);
-                }catch (Exception e) {
-                    System.out.println("ERROR");
-                }
-        
-        
         Platform.runLater(() -> {
         Stage stage = (Stage) clickLogIn.getScene().getWindow();
         stage.setMinWidth(285);
