@@ -160,7 +160,6 @@ public class MenuController implements Initializable {
             stage.show();
         } catch (IOException e) {
             System.out.println("Error while loading MapUpload screen");
-            e.printStackTrace();
         }
     }
     /**
@@ -225,7 +224,6 @@ public class MenuController implements Initializable {
             stage.show();
         } catch (IOException e) {
             System.out.println("Error while loading logIn screen");
-            e.printStackTrace();
         }
     }
     private void handleMonStats(ActionEvent event){
@@ -236,7 +234,6 @@ public class MenuController implements Initializable {
             stage.show();
         } catch (IOException e) {
             System.out.println("Error while loading cumulative totals screen");
-            e.printStackTrace();
         }
     }
     
@@ -248,7 +245,6 @@ public class MenuController implements Initializable {
             stage.show();
         } catch (IOException e) {
             System.out.println("Error while loading edit profile screen");
-            e.printStackTrace();
         }
     }
     
@@ -263,6 +259,13 @@ public class MenuController implements Initializable {
         Button sourceButton = (Button) event.getSource();
         Stage currentStage = (Stage) sourceButton.getScene().getWindow();
         File selectedGpx = fileChooser.showOpenDialog(currentStage);
+        if (selectedGpx == null) return;
+
+        String validationError = validateGpxFile(selectedGpx);
+        if (validationError != null) {
+            showInvalidGpxAlert(validationError);
+            return;
+        }
 
         if (selectedGpx != null) {
             // Pass the file to the database library tool to parse and persist it
@@ -302,6 +305,59 @@ public class MenuController implements Initializable {
             }
         }
     }
+
+    private String validateGpxFile(File file) {
+        if (!file.exists() || !file.isFile()) return "The selected GPX file does not exist.";
+        if (!file.canRead()) return "The selected GPX file cannot be read.";
+        if (!file.getName().toLowerCase().endsWith(".gpx")) return "The selected file must be a GPX file.";
+
+        try {
+            javax.xml.parsers.DocumentBuilderFactory factory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
+            factory.setExpandEntityReferences(false);
+
+            org.w3c.dom.Document doc = factory.newDocumentBuilder().parse(file);
+            doc.getDocumentElement().normalize();
+
+            org.w3c.dom.Element root = doc.getDocumentElement();
+            if (root == null || !"gpx".equalsIgnoreCase(root.getNodeName())) {
+                return "The selected file is not a valid GPX document.";
+            }
+
+            org.w3c.dom.NodeList trackPoints = doc.getElementsByTagName("trkpt");
+            if (trackPoints == null || trackPoints.getLength() < 2) {
+                return "The GPX file does not contain enough track points.";
+            }
+
+            for (int i = 0; i < trackPoints.getLength(); i++) {
+                org.w3c.dom.Element trkpt = (org.w3c.dom.Element) trackPoints.item(i);
+                String latText = trkpt.getAttribute("lat");
+                String lonText = trkpt.getAttribute("lon");
+
+                if (latText == null || latText.isBlank() || lonText == null || lonText.isBlank()) {
+                    return "The GPX file contains a track point without latitude or longitude.";
+                }
+
+                double lat = Double.parseDouble(latText);
+                double lon = Double.parseDouble(lonText);
+
+                if (lat < -90.0 || lat > 90.0 || lon < -180.0 || lon > 180.0) {
+                    return "The GPX file contains coordinates outside the valid range.";
+                }
+            }
+
+            return null;
+        } catch (Exception ex) {
+            return "The GPX file is corrupted or is not valid XML.";
+        }
+    }
+
+    private void showInvalidGpxAlert(String message) {
+        javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
+        alert.setTitle("Invalid GPX file");
+        alert.setHeaderText("The selected GPX file cannot be imported");
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
     
     /**
      * Transitions seamlessly to the ActivityMenu screen by swapping roots 
@@ -331,7 +387,6 @@ public class MenuController implements Initializable {
 
         } catch (IOException e) {
             System.err.println("Error launching the Activity Map View Scene root swap transaction.");
-            e.printStackTrace();
         }
     }
 

@@ -58,7 +58,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polyline;
 import javafx.scene.text.Text;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import upv.ipc.sportlib.Activity;
 import upv.ipc.sportlib.Annotation;
@@ -132,12 +131,6 @@ public class ActivityMenuController implements Initializable {
     private ContextMenu mapContextMenu;
 
 
-    /**
-     * Indica si el controlador está en modo inserción de POI.
-     * {@code true} → el próximo clic izquierdo sobre el mapa abre el diálogo.
-     */
-    private boolean insertionMode = false;
-
     // =========================================================
     //  ELEMENTOS FXML  (inyectados automáticamente por el cargador)
     // =========================================================
@@ -163,18 +156,24 @@ public class ActivityMenuController implements Initializable {
 
     @FXML
     private Label mousePosition;
+    
     @FXML
     private Label lblDistance;
+    
     @FXML
     private Label lblDuration;
+    
     @FXML
     private Label lblSpeed;
+    
     @FXML
     private Label lblPace;
+    
     @FXML
     private Label lblGain;
     @FXML
     private Label lblLoss;
+    
     @FXML
     private Label lblMaxAltitude;
     @FXML
@@ -209,6 +208,11 @@ public class ActivityMenuController implements Initializable {
     private Circle elevationHoverMarker;
     private final List<Line> speedOverlayLines = new ArrayList<>();
     private final List<javafx.scene.Node> annotationNodes = new ArrayList<>();
+    private AnnotationType pendingTwoPointType;
+    private String pendingAnnotationText;
+    private String pendingAnnotationColor;
+    private double pendingAnnotationStrokeWidth;
+    private GeoPoint pendingFirstPoint;
 
 
     // =========================================================
@@ -264,50 +268,6 @@ public class ActivityMenuController implements Initializable {
     }
 
     // =========================================================
-    //  SELECCIÓN EN EL LISTVIEW → CENTRADO EN EL MAPA
-    // =========================================================
-
-    /**
-     * Se ejecuta cuando el usuario hace clic en un elemento del ListView.
-     *
-     * Objetivo: centrar el ScrollPane sobre la posición del POI seleccionado
-     * con una animación suave de 500 ms, y mover el pin al punto.
-     *
-     * Cálculo del scroll
-     * ------------------
-     * El ScrollPane expresa su posición como valores normalizados [0, 1]:
-     *   · hValue = 0 → extremo izquierdo
-     *   · hValue = 1 → extremo derecho
-     *
-     * Para centrar el POI necesitamos:
-     *
-     *   scrollH = (poiX_escalado - viewportAncho / 2)
-     *             ─────────────────────────────────────
-     *             (mapaAncho_escalado - viewportAncho)
-     *
-     * Aplicamos clamp para no salir del rango [0, 1].
-     *
-     * @param event evento de ratón sobre el ListView
-     */
-    @FXML
-    void listClicked(MouseEvent event) {
-        // 1. Fetch the annotation object from the list row selection
-        Annotation itemSelected = map_annotations_listview.getSelectionModel().getSelectedItem();
-        if (itemSelected == null || itemSelected.getGeoPoints().isEmpty()) return;
-
-        // 2. Unpack the geographic GPS anchor coordinates 
-        GeoPoint geo = itemSelected.getGeoPoints().get(0);
-
-        // 3. Translate the coordinates into absolute map pixels 
-        MapRegion region = currentActivity.getSuggestedMap();
-        MapProjection proj = new MapProjection(region, mapPane.getWidth(), mapPane.getHeight());
-        Point2D pixel = proj.project(geo);
-
-        // 4. Center your viewport scrollbars right over the calculated location
-        centerMapOnCoordinates(pixel.getX(), pixel.getY());
-    }
-
-    // =========================================================
     //  CONSTRUCCIÓN DEL MAPA
     // =========================================================
 
@@ -349,11 +309,7 @@ public class ActivityMenuController implements Initializable {
         // ── Manejador de clics sobre el mapa ──────────────────────────
         // Gestionamos el clic derecho (menú contextual) y el clic izquierdo
         // en modo inserción (FIX 2).
-        mapPane.setOnMouseClicked(e -> {
-            if (e.getButton() == MouseButton.SECONDARY) {
-                onMapRightClick(e.getX(), e.getY());
-            }
-        });
+        mapPane.setOnMouseClicked(this::handleMapClick);
 
         // ── Jerarquía de Groups para el zoom ──────────────────────────
         // contentGroup es el nodo raíz que recibe el ScrollPane.
@@ -377,6 +333,56 @@ public class ActivityMenuController implements Initializable {
     // =========================================================
     //  MENÚ CONTEXTUAL (clic derecho sobre el mapa)
     // =========================================================
+
+
+
+    private void handleMapClick(MouseEvent event) {
+        if (pendingTwoPointType != null) {
+            if (event.getButton() == MouseButton.PRIMARY) {
+                finishPendingTwoPointAnnotation(event.getX(), event.getY());
+            }
+            return;
+        }
+
+        if (event.getButton() == MouseButton.SECONDARY) {
+            onMapRightClick(event.getX(), event.getY());
+        }
+    }
+
+    private void finishPendingTwoPointAnnotation(double x, double y) {
+        if (currentActivity == null || mapPane == null || pendingFirstPoint == null || pendingTwoPointType == null) return;
+
+        MapRegion region = currentActivity.getSuggestedMap();
+        if (region == null) return;
+
+        MapProjection proj = new MapProjection(region, mapPane.getWidth(), mapPane.getHeight());
+        GeoPoint secondPoint = proj.unproject(x, y);
+
+        List<GeoPoint> pointsList = new ArrayList<>();
+        pointsList.add(pendingFirstPoint);
+        pointsList.add(secondPoint);
+
+        Annotation completedAnnotation = new Annotation(
+            pendingTwoPointType,
+            pendingAnnotationText,
+            pendingAnnotationColor,
+            pendingAnnotationStrokeWidth,
+            pointsList
+        );
+
+        pendingTwoPointType = null;
+        pendingAnnotationText = null;
+        pendingAnnotationColor = null;
+        pendingAnnotationStrokeWidth = 0.0;
+        pendingFirstPoint = null;
+
+        Annotation savedAnnotation = SportActivityApp.getInstance().addAnnotation(currentActivity, completedAnnotation);
+        if (savedAnnotation != null) {
+            renderSingleAnnotation(savedAnnotation);
+            map_annotations_listview.getItems().add(savedAnnotation);
+        }
+    }
+
 
     /**
      * Muestra el menú contextual reutilizable en la posición del clic.
@@ -417,13 +423,11 @@ public class ActivityMenuController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
 
-        // ── Configuración del slider de zoom ──────────────────────────
-        zoom_slider.setMin(0.5);   // zoom mínimo: 50 %
-        zoom_slider.setMax(1.5);   // zoom máximo: 150 %
-        zoom_slider.setValue(1.0); // valor inicial: 100 %
+        zoom_slider.setMin(0.5);
+        zoom_slider.setMax(1.5);
+        zoom_slider.setValue(1.0);
 
-        // Listener que invoca zoom() cada vez que el slider cambia de valor.
-        // Usamos una expresión lambda en lugar de una clase anónima por brevedad.
+
         zoom_slider.valueProperty().addListener(
             (observable, oldVal, newVal) -> zoom((Double) newVal)
         );
@@ -431,7 +435,6 @@ public class ActivityMenuController implements Initializable {
         MenuItem miText = new MenuItem("📝 Add annotation");
         mapContextMenu = new ContextMenu(miText);
 
-        // ── ListView: right-click to remove an annotation ──────────────
         MenuItem miRemove = new MenuItem("🗑 Remove annotation");
         miRemove.setOnAction(e -> {
             Annotation selected = map_annotations_listview.getSelectionModel().getSelectedItem();
@@ -443,7 +446,6 @@ public class ActivityMenuController implements Initializable {
         });
         map_annotations_listview.setContextMenu(new ContextMenu(miRemove));
 
-        // ── Carga del mapa inicial ─────────────────────────────────────
         buildMap(new File("maps/upv.jpg"));
 
         map_annotations_listview.setCellFactory(listView -> new ListCell<Annotation>() {
@@ -458,25 +460,22 @@ public class ActivityMenuController implements Initializable {
             }
         });
 
-        // Add a click listener to the list to center the map viewport on the selected marker
         map_annotations_listview.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null && !newVal.getGeoPoints().isEmpty()) {
-                // Fetch the first geographic anchor point of the saved marker
+            if (newVal != null && !newVal.getGeoPoints().isEmpty()
+                    && currentActivity != null && mapPane != null && zoomGroup != null) {
+
                 GeoPoint geo = newVal.getGeoPoints().get(0);
-                
-                // Reconstruct or access the active projection matrix to map pixels
+
                 MapRegion currentRegion = currentActivity.getSuggestedMap();
+                if (currentRegion == null) return;
                 MapProjection proj = new MapProjection(currentRegion, mapPane.getWidth(), mapPane.getHeight());
                 Point2D pixel = proj.project(geo);
-                
-                // Smoothly focus the layout scroll bars right over the target coordinate area
+
                 centerMapOnCoordinates(pixel.getX(), pixel.getY());
             }
         });
-        
-        // =========================================================
-        // 6.1 - Elevation profile 
-        // =========================================================
+
+
 
         if (elevationChart != null) {
             elevationChart.setCreateSymbols(false);
@@ -487,9 +486,7 @@ public class ActivityMenuController implements Initializable {
             elevationLabel.setText("Move the mouse over the profile to inspect the route");
         }
 
-        // =========================================================
-        // 6.2 - Speed over the route
-        // =========================================================
+
 
         if (showSpeedOverlay != null) {
             showSpeedOverlay.selectedProperty().addListener((obs, wasOn, isOn) -> {
@@ -499,29 +496,19 @@ public class ActivityMenuController implements Initializable {
                     segmentDetailsLabel.setText(isOn ? "Place the mouse cursor in a segment of the route to see the speed for that segment" : "");
                 }
             });
-        }
-        
+        }    
+
         Platform.runLater(() -> {
-        Stage stage = (Stage) elevationLabel.getScene().getWindow();
-        stage.setMinWidth(1315);
-        stage.setMinHeight(900);
-    });
-    }
+            Stage stage = (Stage) elevationLabel.getScene().getWindow();
+            stage.setMinWidth(1315);
+            stage.setMinHeight(900);
+        });
+}
 
     // =========================================================
     //  INDICADOR DE POSICIÓN DEL RATÓN
     // =========================================================
 
-    /**
-     * Actualiza la etiqueta {@code mousePosition} con las coordenadas
-     * actuales del ratón, tanto en el sistema de la escena como en el
-     * sistema local del nodo sobre el que se mueve.
-     *
-     * Útil para depuración y para que los alumnos comprendan la diferencia
-     * entre coordenadas de escena y coordenadas locales.
-     *
-     * @param event evento de movimiento del ratón
-     */
     @FXML
     private void showPosition(MouseEvent event) {
         mousePosition.setText(
@@ -536,14 +523,6 @@ public class ActivityMenuController implements Initializable {
     //  DIÁLOGO "ACERCA DE"
     // =========================================================
 
-    /**
-     * Muestra un diálogo informativo con datos de la asignatura.
-     *
-     * Nota: accedemos al Stage del diálogo para poder personalizar
-     * su icono, ya que Alert no expone directamente esa propiedad.
-     *
-     * @param event evento de acción del menú
-     */
     @FXML
     private void about(ActionEvent event) {
         Alert mensaje = new Alert(Alert.AlertType.INFORMATION);
@@ -559,68 +538,29 @@ public class ActivityMenuController implements Initializable {
         mensaje.showAndWait(); // Bloquea hasta que el usuario cierra el diálogo
     }
 
-    // =========================================================
-    //  CAMBIAR EL MAPA (selector de fichero)
-    // =========================================================
-
-    /**
-     * Abre un selector de fichero para que el usuario elija una imagen
-     * diferente como mapa y reconstruye toda la vista.
-     *
-     * FIX 3: se comprueba que imgFile no sea null antes de usarlo,
-     * evitando NullPointerException cuando el usuario cierra el FileChooser
-     * sin seleccionar ningún fichero.
-     *
-     * @param event evento de acción del menú
-     * @throws IOException si hay un problema al obtener la ruta canónica
-     */
-    @FXML
-    private void cambiarMapa(ActionEvent event) throws IOException {
-        FileChooser fc = new FileChooser();
-        fc.setInitialDirectory(new File(".")); // Empezamos en el directorio del proyecto
-
-        File imgFile = fc.showOpenDialog(zoom_slider.getScene().getWindow());
-
-        // FIX 3: showOpenDialog() devuelve null si el usuario cancela la selección
-        if (imgFile != null) {
-            System.out.println("Mapa seleccionado: " + imgFile.getCanonicalPath());
-            buildMap(imgFile); // Reconstruimos la vista con la nueva imagen
-            map_annotations_listview.getItems().clear(); // Borramos los datos del mapa anterior
-        }
-    }
+    
 
     @FXML
     private void handleGoBack(ActionEvent event) {
         try {
-            // 1. Load the Menu FXML layout file
-            // Note: Ensure the string path matches your file structure capitalization perfectly (e.g., "Menu.fxml")
             Parent menuRoot = FXMLLoader.load(getClass().getResource("/mapademo/Menu.fxml"));
-            
-            // 2. Get the current active Stage (window) using the button's scene reference
             Stage stage = (Stage) map_scrollpane.getScene().getWindow();
-            
-            // 3. Swap the root scene view to return to your main dashboard
-            Scene scene = new Scene(menuRoot);
-            stage.setScene(scene);
+            stage.setScene(new Scene(menuRoot));
             stage.show();
-            
         } catch (IOException e) {
             System.err.println("Error reloading Menu view: " + e.getMessage());
-            e.printStackTrace();
         }
     }
-    
+
     public void loadActivityTrack(Activity activity) {
         if (activity == null) return;
 
-        // 1. Fetch the recommended map region computed by the library database
         MapRegion region = activity.getSuggestedMap();
         if (region == null) {
             System.err.println("No matching map region found for this activity coordinates.");
             return;
         }
 
-        // 2. Verify that the map background image file exists locally
         File imgFile = new File(region.getImagePath());
         if (!imgFile.exists()) {
             map_scrollpane.setContent(
@@ -628,63 +568,46 @@ public class ActivityMenuController implements Initializable {
             return;
         }
 
-        // 3. Load the image and extract its precise dimensions
         Image img = new Image(imgFile.toURI().toString());
         double W = img.getWidth();
         double H = img.getHeight();
 
-        // 4. Initialize the map container Pane with the exact image bounds
         mapPane = new Pane();
         mapPane.setPrefSize(W, H);
-        mapPane.setMinSize(W, H);  
-        mapPane.setMaxSize(W, H);  
+        mapPane.setMinSize(W, H);
+        mapPane.setMaxSize(W, H);
 
         ImageView iv = new ImageView(img);
         iv.setFitWidth(W);
         iv.setFitHeight(H);
         mapPane.getChildren().add(iv);
 
-        // Reattach your mouse canvas click handlers
-        mapPane.setOnMouseClicked(e -> {
-            if (e.getButton() == MouseButton.SECONDARY) {
-                onMapRightClick(e.getX(), e.getY());
-            } else if (e.getButton() == MouseButton.PRIMARY && insertionMode) {
-                insertionMode = false;
-                mapPane.setStyle(""); 
-                // FIXED: Points to your multi-type prompt system instead of legacy POI text
-                promptForAnnotation(e.getX(), e.getY());
-            }
-        });
+        mapPane.setOnMouseClicked(this::handleMapClick);
 
-        // 5. Initialize the library projection engine mapping GPS coordinates to image pixels
         MapProjection proj = new MapProjection(region, W, H);
 
-        // 6. Project and trace the complete route path using a JavaFX Polyline
         Polyline route = new Polyline();
-        route.setStroke(Color.BLUE);     // Route trace outline styling
+        route.setStroke(Color.BLUE);
         route.setStrokeWidth(3.0);
-        route.setFill(Color.TRANSPARENT); // FIXED: Stops JavaFX from drawing a solid black shape blob
+        route.setFill(Color.TRANSPARENT);
 
         for (TrackPoint tp : activity.getTrackPoints()) {
-            Point2D p = proj.project(tp); // Web Mercator conversion projection algorithm
+            Point2D p = proj.project(tp);
             route.getPoints().addAll(p.getX(), p.getY());
         }
-        mapPane.getChildren().add(route); // Add the complete vector path onto the canvas 
+        mapPane.getChildren().add(route);
 
-        // 7. Re-assemble the zoom group structural architecture node tree hierarchy
         zoomGroup = new Group();
         Group contentGroup = new Group();
         zoomGroup.getChildren().add(mapPane);
         contentGroup.getChildren().add(zoomGroup);
 
-        // Scale the graphic layout node using the current active zoom slider value
         double currentZoom = zoom_slider.getValue();
         zoomGroup.setScaleX(currentZoom);
         zoomGroup.setScaleY(currentZoom);
 
         map_scrollpane.setContent(contentGroup);
 
-        // 8. Place visual start (green) and end (red) position markers on the canvas map trace
         if (!activity.getTrackPoints().isEmpty()) {
             Point2D startPixel = proj.project(activity.getStartPoint());
             Point2D endPixel = proj.project(activity.getEndPoint());
@@ -694,33 +617,26 @@ public class ActivityMenuController implements Initializable {
 
             mapPane.getChildren().addAll(startMarker, endMarker);
 
-            // Automatically focus the scroll bars over the track starting point
             centerMapOnCoordinates(startPixel.getX(), startPixel.getY());
         }
 
-        // 9. Update your right sidebar GridPane with the data values
         displayActivityStatistics(activity);
 
-        // 10. Track globally which activity is active inside your class instance
-        this.currentActivity = activity; 
+        this.currentActivity = activity;
 
-        // 11. Wipe previous layout records from the side panel view before rendering anew
         map_annotations_listview.getItems().clear();
         annotationNodes.clear();
 
-        // 12. Scenario 4.3 Compliance: Extract historical records and trace them dynamically onto the canvas view
         for (Annotation ann : activity.getAnnotations()) {
             renderSingleAnnotation(ann);
             map_annotations_listview.getItems().add(ann);
         }
 
-        // Reset speed overlay state for the new activity
         speedOverlayLines.clear();
         if (showSpeedOverlay != null) showSpeedOverlay.setSelected(false);
         if (segmentDetailsLabel != null) segmentDetailsLabel.setText("");
 
-        // 6.1 & 6.2 – Defer until JavaFX has done a layout pass so
-        // mapPane.getWidth()/getHeight() return real values (not 0.0).
+
         final Activity activityRef = activity;
         Platform.runLater(() -> {
             initializeElevationProfile(activityRef.getTrackPoints());
@@ -731,60 +647,62 @@ public class ActivityMenuController implements Initializable {
     /**
      * Repositions the scroll bars smoothly over the targeted absolute map pixels.
      */
+
     private void centerMapOnCoordinates(double x, double y) {
         double mapWidth  = mapPane.getWidth()  * zoomGroup.getScaleX();
         double mapHeight = mapPane.getHeight() * zoomGroup.getScaleY();
         double viewW = map_scrollpane.getViewportBounds().getWidth();
         double viewH = map_scrollpane.getViewportBounds().getHeight();
 
-        double scrollH = (x * zoomGroup.getScaleX() - viewW / 2) / (mapWidth  - viewW);
-        double scrollV = (y * zoomGroup.getScaleY() - viewH / 2) / (mapHeight - viewH);
+        double denominatorH = mapWidth - viewW;
+        double denominatorV = mapHeight - viewH;
+
+        double scrollH = denominatorH <= 0 ? 0.5 : (x * zoomGroup.getScaleX() - viewW / 2) / denominatorH;
+        double scrollV = denominatorV <= 0 ? 0.5 : (y * zoomGroup.getScaleY() - viewH / 2) / denominatorV;
 
         map_scrollpane.setHvalue(Math.max(0, Math.min(1, scrollH)));
         map_scrollpane.setVvalue(Math.max(0, Math.min(1, scrollV)));
     }
     
-    /**
-     * Extracts geographic and performance metrics from the activity 
-     * and populates the statistics GridPane layout labels.
-     */
+    //Extracts geographic and performance metrics from the activity and populates the statistics GridPane layout labels.
+
     private void displayActivityStatistics(Activity activity) {
         if (activity == null) return;
 
-        // 1. Convert total distance from meters to kilometers
         double distanceKm = activity.getTotalDistance() / 1000.0;
         lblDistance.setText(String.format("%.2f km", distanceKm));
 
-        // 2. Format the duration into a standard HH:MM:SS time string
         long totalSeconds = activity.getDuration().getSeconds();
         long hours = totalSeconds / 3600;
         long minutes = (totalSeconds % 3600) / 60;
         long secs = totalSeconds % 60;
         lblDuration.setText(String.format("%02d:%02d:%02d", hours, minutes, secs));
 
-        // 3. Display average speed directly in km/h
         lblSpeed.setText(String.format("%.2f km/h", activity.getAverageSpeed()));
 
-        // 4. Display average pace directly in minutes per kilometer
         lblPace.setText(String.format("%.2f min/km", activity.getAveragePace()));
 
-        // 5. Display cumulative positive ascent and negative descent meters
         lblGain.setText(String.format("+%.0f m", activity.getElevationGain()));
         lblLoss.setText(String.format("-%.0f m", activity.getElevationLoss()));
 
-        // 6. Display maximum and minimum recorded altitudes above sea level
         lblMaxAltitude.setText(String.format("%.0f m", activity.getMaxElevation()));
         lblMinAltitude.setText(String.format("%.0f m", activity.getMinElevation()));
     }
-    
-    /**
-     * Scenario 4.2 Compliance: Prompts the user to select an annotation type,
-     * description, and color, then registers the object to the database .
-     */
-    private void promptForAnnotation(double x, double y) {
-        if (currentActivity == null) return;
+    private int requiredGeoPointCount(AnnotationType type) {
+        if (type == AnnotationType.LINE || type == AnnotationType.CIRCLE) {
+            return 2;
+        }
+        return 1;
+    }
 
-        // 1. Create a custom multi-field Dialog layout container
+    
+    //Scenario 4.2 Compliance: Prompts the user to select an annotation type, description, and color, then registers the object to the database.
+
+
+
+    private void promptForAnnotation(double x, double y) {
+        if (currentActivity == null || mapPane == null) return;
+
         Dialog<Annotation> dialog = new Dialog<>();
         dialog.setTitle("New Geographic Annotation");
         dialog.setHeaderText("Configure your route annotation details:");
@@ -792,20 +710,16 @@ public class ActivityMenuController implements Initializable {
         ButtonType saveButtonType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
 
-        // 2. Dropdown choice selector for Annotation Types 
         ChoiceBox<AnnotationType> typeSelector = new ChoiceBox<>(
             FXCollections.observableArrayList(AnnotationType.values())
         );
-        typeSelector.setValue(AnnotationType.TEXT); // Default selection fallback
+        typeSelector.setValue(AnnotationType.TEXT);
 
-        // 3. Text field for descriptions 
         TextField textInput = new TextField();
         textInput.setPromptText("Enter notes or label text...");
 
-        // 4. Color selection tool 
         ColorPicker colorSelector = new ColorPicker(Color.RED);
 
-        // Assemble fields vertically using a standard spacing VBox layout container
         VBox dialogContent = new VBox(12);
         dialogContent.getChildren().addAll(
             new Label("Annotation Type:"), typeSelector,
@@ -814,77 +728,81 @@ public class ActivityMenuController implements Initializable {
         );
         dialog.getDialogPane().setContent(dialogContent);
 
-        // 5. Convert dialog input data into a concrete library Annotation instance on click
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == saveButtonType) {
                 AnnotationType selectedType = typeSelector.getValue();
                 String enteredText = textInput.getText().trim();
-                
-                // Convert JavaFX Color object into standard CSS HEX String format (#RRGGBB)
+                if (selectedType == AnnotationType.TEXT && enteredText.isEmpty()) return null;
+
                 Color c = colorSelector.getValue();
-                String hexColor = String.format("#%02X%02X%02X", 
-                    (int)(c.getRed() * 255), 
-                    (int)(c.getGreen() * 255), 
+                String hexColor = String.format("#%02X%02X%02X",
+                    (int)(c.getRed() * 255),
+                    (int)(c.getGreen() * 255),
                     (int)(c.getBlue() * 255)
                 );
 
-                // Unproject layout click pixels back to real geographic coordinates
                 MapRegion region = currentActivity.getSuggestedMap();
+                if (region == null) return null;
                 MapProjection proj = new MapProjection(region, mapPane.getWidth(), mapPane.getHeight());
                 GeoPoint primaryPoint = proj.unproject(x, y);
 
-                // Generate the required list array of GeoPoints based on specification criteria 
                 List<GeoPoint> pointsList = new ArrayList<>();
-                pointsList.add(primaryPoint); // First anchor point 
+                pointsList.add(primaryPoint);
 
-                // If type is LINE or CIRCLE, it strictly requires 2 distinct points 
-                if (selectedType == AnnotationType.LINE || selectedType == AnnotationType.CIRCLE) {
-                    // Create a secondary point shifted slightly offset so it renders cleanly
-                    GeoPoint secondaryPoint = new GeoPoint(
-                        primaryPoint.getLatitude() - 0.002, 
-                        primaryPoint.getLongitude() + 0.002
-                    );
-                    pointsList.add(secondaryPoint); // Second anchor point 
-                }
 
-                // Instantiate and return the formal collection instance
                 return new Annotation(
                     selectedType,
                     enteredText,
                     hexColor,
-                    3.0, // Standard trace outline pixel thickness scale
+                    3.0,
                     pointsList
                 );
             }
             return null;
         });
 
-        // 6. Execute dialog and save valid outputs directly to the SQLite persistence database
         Optional<Annotation> result = dialog.showAndWait();
         if (result.isPresent()) {
-            Annotation savedAnnotation = SportActivityApp.getInstance().addAnnotation(currentActivity, result.get());
+            Annotation createdAnnotation = result.get();
+
+            if (requiredGeoPointCount(createdAnnotation.getType()) == 2) {
+                pendingTwoPointType = createdAnnotation.getType();
+                pendingAnnotationText = createdAnnotation.getText();
+                pendingAnnotationColor = createdAnnotation.getColor();
+                pendingAnnotationStrokeWidth = createdAnnotation.getStrokeWidth();
+                pendingFirstPoint = createdAnnotation.getGeoPoints().get(0);
+
+                Alert secondPointAlert = new Alert(Alert.AlertType.INFORMATION);
+                secondPointAlert.setTitle("Second point required");
+                secondPointAlert.setHeaderText("Select the second point on the map");
+                secondPointAlert.setContentText("Click on the map to choose the "
+                    + (createdAnnotation.getType() == AnnotationType.LINE ? "end point of the line." : "edge of the circle."));
+                secondPointAlert.showAndWait();
+                return;
+            }
+
+            Annotation savedAnnotation = SportActivityApp.getInstance().addAnnotation(currentActivity, createdAnnotation);
             if (savedAnnotation != null) {
-                // Refresh the layout elements immediately on successful storage save
+
                 renderSingleAnnotation(savedAnnotation);
                 map_annotations_listview.getItems().add(savedAnnotation);
             }
         }
     }
 
-    /**
-     * Evaluates an annotation object data profile and renders its corresponding 
-     * vector shapes or text labels dynamically onto the map canvas layout.
-     */
-    private void renderSingleAnnotation(Annotation ann) {
-        if (ann == null || ann.getGeoPoints().isEmpty()) return;
+    //Evaluates an annotation object data profile and renders its corresponding vector shapes or text labels dynamically onto the map canvas layout.
 
-        // Fetch active workspace projection metrics matrices
+    private void renderSingleAnnotation(Annotation ann) {
+        if (ann == null || ann.getType() == null || ann.getGeoPoints() == null) return;
+        if (ann.getGeoPoints().size() < requiredGeoPointCount(ann.getType())) return;
+        if (currentActivity == null || mapPane == null) return;
+
         MapRegion region = currentActivity.getSuggestedMap();
+        if (region == null) return;
         MapProjection proj = new MapProjection(region, mapPane.getWidth(), mapPane.getHeight());
 
-        // Project the primary point coordinate down to screen space absolute pixels
         Point2D p1 = proj.project(ann.getGeoPoints().get(0));
-        Color renderColor = Color.web(ann.getColor()); // Parse saved hex color string
+        Color renderColor = Color.web(ann.getColor());
 
         switch (ann.getType()) {
             case POINT:
@@ -904,22 +822,17 @@ public class ActivityMenuController implements Initializable {
                 break;
 
             case LINE:
-                if (ann.getGeoPoints().size() >= 2) {
-                    Point2D p2 = proj.project(ann.getGeoPoints().get(1));
-                    Polyline lineSegment = new Polyline(p1.getX(), p1.getY(), p2.getX(), p2.getY());
-                    lineSegment.setStroke(renderColor);
-                    lineSegment.setStrokeWidth(ann.getStrokeWidth());
-                    mapPane.getChildren().add(lineSegment);
-                    annotationNodes.add(lineSegment);
-                }
+                Point2D lineEnd = proj.project(ann.getGeoPoints().get(1));
+                Polyline lineSegment = new Polyline(p1.getX(), p1.getY(), lineEnd.getX(), lineEnd.getY());
+                lineSegment.setStroke(renderColor);
+                lineSegment.setStrokeWidth(ann.getStrokeWidth());
+                mapPane.getChildren().add(lineSegment);
+                annotationNodes.add(lineSegment);
                 break;
 
             case CIRCLE:
-                double radiusPx = 25.0;
-                if (ann.getGeoPoints().size() >= 2) {
-                    Point2D p2 = proj.project(ann.getGeoPoints().get(1));
-                    radiusPx = p1.distance(p2);
-                }
+                Point2D edge = proj.project(ann.getGeoPoints().get(1));
+                double radiusPx = p1.distance(edge);
                 Circle geographicArea = new Circle(p1.getX(), p1.getY(), radiusPx, Color.TRANSPARENT);
                 geographicArea.setStroke(renderColor);
                 geographicArea.setStrokeWidth(ann.getStrokeWidth());
@@ -929,11 +842,10 @@ public class ActivityMenuController implements Initializable {
         }
     }
     
-    /**
-     * Removes all annotation visuals from the map and redraws them
-     * from the current activity's annotation list. Called after a deletion.
-     */
+    //Removes all annotation visuals from the map and redraws them from the current activity's annotation list.
+
     private void reloadAnnotationsOnMap() {
+        if (mapPane == null) return;
         mapPane.getChildren().removeAll(annotationNodes);
         annotationNodes.clear();
         for (Annotation ann : map_annotations_listview.getItems()) {
@@ -941,8 +853,6 @@ public class ActivityMenuController implements Initializable {
         }
     }
 
-    // =========================================================
-    // =========================================================
     private void ensureElevationHoverMarker() {
         if (mapPane == null) return;
 
@@ -957,7 +867,7 @@ public class ActivityMenuController implements Initializable {
             mapPane.getChildren().add(elevationHoverMarker);
         }
     }
-    
+
     private static class RouteSample {
         private final Point2D pixel;
         private final double cumulativeKm;
@@ -977,10 +887,8 @@ public class ActivityMenuController implements Initializable {
      * - coordinates in the map
      * - the accumulated distance
      * - altitude
-     *
-     * In the same pass, the segment speeds are cached so the speed overlay
-     * does not need to recompute route geometry again.
      */
+
     private void buildElevationSamples(List<TrackPoint> points, MapProjection projection) {
         elevationSamples.clear();
         segmentSpeeds.clear();
@@ -1001,14 +909,10 @@ public class ActivityMenuController implements Initializable {
 
             if (previous != null) {
                 double speedKmh = segmentSpeedKmh(previous, current);
-                long seconds = java.time.Duration.between(previous.getTime(), current.getTime()).getSeconds();
+                cumulativeKm += previous.distanceTo(current) / 1000.0;
 
-                if (seconds > 0 && speedKmh > 0.0) {
-                    cumulativeKm += speedKmh * (seconds / 3600.0);
-                    minSegmentSpeedKmh = Math.min(minSegmentSpeedKmh, speedKmh);
-                    maxSegmentSpeedKmh = Math.max(maxSegmentSpeedKmh, speedKmh);
-                }
-
+                minSegmentSpeedKmh = Math.min(minSegmentSpeedKmh, speedKmh);
+                maxSegmentSpeedKmh = Math.max(maxSegmentSpeedKmh, speedKmh);
                 segmentSpeeds.add(speedKmh);
             }
 
@@ -1025,7 +929,7 @@ public class ActivityMenuController implements Initializable {
         }
     }
 
-    private void populateElevationChart() { // to draw the samples in the graph
+    private void populateElevationChart() {
         if (elevationChart == null) return;
 
         elevationChart.getData().clear();
@@ -1047,17 +951,13 @@ public class ActivityMenuController implements Initializable {
             }
 
             if (elevationLabel != null) {
-                elevationLabel.setText("");
+                elevationLabel.setText("Move the mouse over the profile to inspect the route");
             }
         });
     }
 
-    /**
-     * Busca la muestra cuya distancia acumulada esté más cerca
-     * del valor X del gráfico.
-     *
-     * The samples are generated in route order, so a binary search is enough.
-     */
+    //Busca la muestra cuya distancia acumulada esté más cerca del valor X del gráfico.
+
     private RouteSample findNearestSampleByKm(double km) {
         if (elevationSamples.isEmpty()) return null;
 
@@ -1083,9 +983,7 @@ public class ActivityMenuController implements Initializable {
                 ? left : right;
     }
 
-    /**
-     * Get the mouse position and translate to coordinates over the map.
-     */
+    //Get the mouse position and translate to coordinates over the map.
     private void handleElevationChartHover(MouseEvent event) {
         if (elevationSamples.isEmpty()) return;
         if (!(elevationChart.getXAxis() instanceof NumberAxis)) return;
@@ -1115,13 +1013,13 @@ public class ActivityMenuController implements Initializable {
     }
 
     private void initializeElevationProfile(List<TrackPoint> trackPoints) {
-        if (currentActivity == null || mapPane == null || trackPoints == null || trackPoints.size() < 2) {
+        if (currentActivity == null || mapPane == null || elevationChart == null
+                || trackPoints == null || trackPoints.size() < 2) {
             return;
         }
 
-        // Scene Builder always creates a LineChart with CategoryAxis on X.
-        // We need NumberAxis on both axes for numeric km/altitude data.
-        // Fix it at runtime so the FXML never needs to be hand-edited.
+
+
         if (!(elevationChart.getXAxis() instanceof NumberAxis)) {
             NumberAxis numX = new NumberAxis();
             numX.setLabel("Distance (km)");
@@ -1139,19 +1037,20 @@ public class ActivityMenuController implements Initializable {
             fixed.setPrefWidth(elevationChart.getPrefWidth());
             fixed.setPrefHeight(elevationChart.getPrefHeight());
 
-            // Preserve layout constraints (VBox.vgrow, etc.)
             javafx.scene.layout.VBox.setVgrow(fixed,
                 javafx.scene.layout.VBox.getVgrow(elevationChart));
 
-            // Swap in the parent container
-            javafx.scene.layout.Pane parent =
-                (javafx.scene.layout.Pane) elevationChart.getParent();
-            int idx = parent.getChildren().indexOf(elevationChart);
-            parent.getChildren().set(idx, fixed);
-            elevationChart = fixed;
+            if (elevationChart.getParent() instanceof javafx.scene.layout.Pane) {
+                javafx.scene.layout.Pane parent =
+                    (javafx.scene.layout.Pane) elevationChart.getParent();
+                int idx = parent.getChildren().indexOf(elevationChart);
+                parent.getChildren().set(idx, fixed);
+                elevationChart = fixed;
+            } else {
+                return;
+            }
 
-            // Axis title labels ("Distance (km)", "Altitude (m)") are internal
-            // Text nodes only reachable via CSS lookup after the chart is in the scene.
+
             Platform.runLater(() ->
                 elevationChart.lookupAll(".axis-label").forEach(node ->
                     node.setStyle("-fx-text-fill: white;"))
@@ -1159,6 +1058,7 @@ public class ActivityMenuController implements Initializable {
         }
 
         MapRegion region = currentActivity.getSuggestedMap();
+        if (region == null) return;
         MapProjection projection = new MapProjection(region, mapPane.getWidth(), mapPane.getHeight());
 
         buildElevationSamples(trackPoints, projection);
@@ -1171,31 +1071,32 @@ public class ActivityMenuController implements Initializable {
 
     /**
      * Calculates speed in km/h between two consecutive TrackPoints.
-     * Reuses the TrackPoint helper already provided by the library.
+     * Reuse the TrackPoint already provided by the library.
      */
+
+
     private double segmentSpeedKmh(TrackPoint a, TrackPoint b) {
-        if (a == null || b == null) return 0.0;
-        return Math.max(0.0, a.speedTo(b));
+        if (a == null || b == null || a.getTime() == null || b.getTime() == null) return 0.0;
+        try {
+            return Math.max(0.0, a.speedTo(b));
+        } catch (RuntimeException ex) {
+            return 0.0;
+        }
     }
 
-    /**
-     * Interpola un color entre rojo (lento) → amarillo → verde (rápido)
-     * según la velocidad relativa al rango de la actividad.
-     */
+    // Rojo es lento, amarillo es una velocidad media y verde es rápido.
+
     private Color speedToColor(double speed, double minSpeed, double maxSpeed) {
         if (maxSpeed <= minSpeed) return Color.YELLOW;
-        double t = (speed - minSpeed) / (maxSpeed - minSpeed); // 0 = slow, 1 = fast
+        double t = (speed - minSpeed) / (maxSpeed - minSpeed);
         double r = Math.max(0, 1.0 - 2 * t);
         double g = Math.min(1.0, 2 * t);
         return new Color(r, g, 0, 1.0);
     }
+    
+    // El color es según la velocidad relativa al rango de la actividad.
+    // Si no se ven es porque están ocultos hasta que activéis la checkbox
 
-    /**
-     * Construye los segmentos de línea coloreados por velocidad,
-     * los superpone al mapa, y rellena la leyenda y el resumen.
-     *
-     * Los segmentos empiezan ocultos; el CheckBox los muestra/oculta.
-     */
     private void initializeSpeedOverlay(List<TrackPoint> points) {
         if (currentActivity == null || mapPane == null || points == null || points.size() < 2) return;
         if (elevationSamples.size() < 2 || segmentSpeeds.isEmpty()) return;
@@ -1208,7 +1109,6 @@ public class ActivityMenuController implements Initializable {
         final double finalMin = minSegmentSpeedKmh;
         final double finalMax = maxSegmentSpeedKmh;
 
-        // 2. Dibujar un Line coloreado por tramo usando la geometría ya calculada
         for (int i = 0; i < segmentSpeeds.size() && (i + 1) < elevationSamples.size(); i++) {
             RouteSample from = elevationSamples.get(i);
             RouteSample to = elevationSamples.get(i + 1);
@@ -1216,7 +1116,7 @@ public class ActivityMenuController implements Initializable {
             Line seg = new Line(from.pixel.getX(), from.pixel.getY(), to.pixel.getX(), to.pixel.getY());
             seg.setStrokeWidth(4.0);
             seg.setStroke(speedToColor(segmentSpeeds.get(i), finalMin, finalMax));
-            seg.setVisible(false);
+            seg.setVisible(showSpeedOverlay != null && showSpeedOverlay.isSelected());
 
             final double segSpeed = segmentSpeeds.get(i);
             final int segIdx = i + 1;
@@ -1234,11 +1134,10 @@ public class ActivityMenuController implements Initializable {
             speedOverlayLines.add(seg);
         }
 
-        // 3. Legend (hidden until the checkbox is enabled)
         if (speedLegendBox != null) {
             speedLegendBox.getChildren().clear();
             speedLegendBox.setSpacing(0);
-            speedLegendBox.setVisible(false);
+            speedLegendBox.setVisible(showSpeedOverlay != null && showSpeedOverlay.isSelected());
             int swatches = 20;
             Label slowLbl = new Label(String.format(" %.1f", finalMin));
             slowLbl.setStyle("-fx-font-size: 10px;");
