@@ -73,10 +73,10 @@ public class CumulativeTotalsController implements Initializable {
         goBack.setOnAction(this::handleGoBack);
         SportActivityApp app = SportActivityApp.getInstance();
         List<Activity> list = app.getActivitiesByUser(app.getCurrentUser());
-        double asc = 0;
-        double time = 0;
-        double dist = 0;
-        double des = 0;
+        double asc = 0.0;
+        double time = 0.0;
+        double dist = 0.0;
+        double des = 0.0;
         LocalDateTime curr = LocalDateTime.now(ZoneId.of("Europe/Madrid"));
         LocalDateTime bef = curr.minusMonths(1);
         for(Activity a : list){
@@ -87,11 +87,11 @@ public class CumulativeTotalsController implements Initializable {
             dist+=a.getTotalDistance();
             time+=a.getAveragePace()*a.getTotalDistance();
         }
-        DecimalFormat df = new DecimalFormat("#.00");
-        TotAsc.setText(df.format(asc)+" Km.");
-        TotDesc.setText(df.format(asc)+" Km.");
-        CumDist.setText(df.format(asc)+" Km.");
-        TotTime.setText(df.format(asc)+" min.");
+        DecimalFormat df = new DecimalFormat("0.00");
+        TotAsc.setText(df.format(asc)+" m.");
+        TotDesc.setText(df.format(des)+" m.");
+        CumDist.setText(df.format(dist/1000)+" Km.");
+        TotTime.setText(df.format(time/1000)+" min.");
     }    
     private void handleGoBack(ActionEvent event){
         try {
