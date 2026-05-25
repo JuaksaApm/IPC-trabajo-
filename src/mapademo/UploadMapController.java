@@ -112,6 +112,7 @@ public class UploadMapController implements Initializable {
         currFile = selectedJPG;
         NameFile.setText(currFile.getName());
     }
+    
     private void handleLoad(ActionEvent event){
         NameFile.setTextFill(Color.WHITE);
         errMaxLat.setText("");
@@ -120,53 +121,53 @@ public class UploadMapController implements Initializable {
         errMinLon.setText("");
         NameFile.setText("");
         boolean failed = false;
-        double latMin = 0;
-        double latMax = 0;
-        double lonMin = 0;
-        double lonMax = 0;
+        double latMin=0;
+        double latMax=0;
+        double lonMin=0;
+        double lonMax=0;
         
         if(MinLat.getText().isEmpty()){
             errMinLat.setText("Must input minimum latitude.");
             failed = true;
-        } else {
-           try {
+        }else{
+           try{
                latMin = Double.parseDouble(MinLat.getText());
-           } catch(NumberFormatException e) {
-               errMinLat.setText("Must input valid latitude.");
-               failed = true;
+           } catch(NumberFormatException e){
+                errMinLat.setText("Must input valid latitude.");
+                failed =true;
            }
         }
         if(MaxLat.getText().isEmpty()){
             errMaxLat.setText("Must input maximum latitude.");
             failed = true;
-        } else {
-           try {
+        }else{
+           try{
                latMax = Double.parseDouble(MaxLat.getText());
-           } catch(NumberFormatException e) {
-               errMaxLat.setText("Must input valid latitude.");
-               failed = true;
+           } catch(NumberFormatException e){
+                errMaxLat.setText("Must input valid latitude.");
+                failed =true;
            }
         }
         if(MinLon.getText().isEmpty()){
             errMinLon.setText("Must input minimum longitude.");
             failed = true;
-        } else {
-           try {
+        }else{
+           try{
                lonMin = Double.parseDouble(MinLon.getText());
-           } catch(NumberFormatException e) {
-               errMinLon.setText("Must input valid longitude.");
-               failed = true;
+           } catch(NumberFormatException e){
+                errMinLon.setText("Must input valid longitude.");
+                failed =true;
            }
         }
         if(MaxLon.getText().isEmpty()){
             errMaxLon.setText("Must input maximum longitude.");
             failed = true;
-        } else {
-           try {
+        }else{
+           try{
                lonMax = Double.parseDouble(MaxLon.getText());
-           } catch(NumberFormatException e) {
-               errMaxLon.setText("Must input valid longitude.");
-               failed = true;
+           } catch(NumberFormatException e){
+                errMaxLon.setText("Must input valid longitude.");
+                failed =true;
            }
         }
         if(currFile == null){
@@ -180,4 +181,3 @@ public class UploadMapController implements Initializable {
         app.addMapRegion(currFile.getName(), currFile, latMin, latMax, lonMin, lonMax);
         gotoMainMenu();
     }
-}
