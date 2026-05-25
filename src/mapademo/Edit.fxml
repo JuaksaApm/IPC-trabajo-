@@ -22,8 +22,8 @@
       <Text fill="WHITE" layoutX="14.0" layoutY="179.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text-color" text="Date of birth" wrappingWidth="190.93670654296875" />
       <Text fill="WHITE" layoutX="200.0" layoutY="68.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text-color" text="Email" wrappingWidth="190.93670654296875" />
       <Text fill="WHITE" layoutX="13.0" layoutY="36.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text-color" text="Fill in the fields you desire to change" wrappingWidth="309.60003662109375" />
-      <Label fx:id="errPass" layoutX="13.0" layoutY="100.0" prefHeight="62.0" prefWidth="191.0" styleClass="labelerr-color" textFill="RED" wrapText="true" />
-      <Label fx:id="errEmail" layoutX="197.0" layoutY="101.0" prefHeight="70.0" prefWidth="200.0" styleClass="labelerr-color" textFill="RED" wrapText="true" />
-      <Label fx:id="errBDay" layoutX="13.0" layoutY="215.0" prefHeight="70.0" prefWidth="191.0" styleClass="labelerr-color" textFill="RED" wrapText="true" />
+      <Label fx:id="errPass" layoutX="13.0" layoutY="100.0" prefHeight="62.0" prefWidth="177.0" styleClass="labelerr-color" textFill="RED" wrapText="true" />
+      <Label fx:id="errEmail" layoutX="198.0" layoutY="100.0" prefHeight="26.0" prefWidth="206.0" styleClass="labelerr-color" textFill="RED" wrapText="true" />
+      <Label fx:id="errBDay" layoutX="13.0" layoutY="215.0" prefHeight="26.0" prefWidth="191.0" styleClass="labelerr-color" textFill="RED" wrapText="true" />
    </children>
 </AnchorPane>
