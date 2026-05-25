@@ -60,6 +60,8 @@ public class MenuController implements Initializable {
     private Button loadMap;
     @FXML
     private Button history;
+    @FXML
+    private Button MonStats;
 
     /**
      * Initializes the controller class.
@@ -69,6 +71,7 @@ public class MenuController implements Initializable {
         logOut.setOnAction(this::logOut);
         edit.setOnAction(this::editProfile);
         loadMap.setOnAction(this::handleLoadMap);
+        MonStats.setOnAction(this::handleMonStats);
         // Load the profile pic to main menu
         SportActivityApp app = SportActivityApp.getInstance();
         User currentUser = app.getCurrentUser();
@@ -203,6 +206,17 @@ public class MenuController implements Initializable {
             stage.show();
         } catch (IOException e) {
             System.out.println("Error while loading logIn screen");
+            e.printStackTrace();
+        }
+    }
+    private void handleMonStats(ActionEvent event){
+        try {
+            Parent mapaRoot = FXMLLoader.load(getClass().getResource("CumulativeTotals.fxml"));
+            Stage stage = (Stage) logOut.getScene().getWindow();
+            stage.setScene(new Scene(mapaRoot));
+            stage.show();
+        } catch (IOException e) {
+            System.out.println("Error while loading cumulative totals screen");
             e.printStackTrace();
         }
     }

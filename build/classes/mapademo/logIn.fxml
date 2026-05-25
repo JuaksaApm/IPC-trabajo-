@@ -8,17 +8,17 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Text?>
 
-<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="271.0" styleClass="table-back" stylesheets="@../resources/estilos.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mapademo.LogInController">
+<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="271.0" styleClass="table-back" stylesheets="@../resources/estilos.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mapademo.LogInController">
    <children>
-      <Button fx:id="clickLogIn" layoutX="14.0" layoutY="343.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="247.0" styleClass="button-main" text="Log In" />
-      <PasswordField fx:id="passwordIn" layoutX="14.0" layoutY="166.0" prefHeight="26.0" prefWidth="247.0" styleClass="back-text" />
       <TextField fx:id="userIn" layoutX="17.0" layoutY="72.0" prefHeight="26.0" prefWidth="247.0" styleClass="back-text" />
+      <PasswordField fx:id="passwordIn" layoutX="14.0" layoutY="166.0" prefHeight="26.0" prefWidth="247.0" styleClass="back-text" />
+      <Hyperlink fx:id="regUser" layoutX="14.0" layoutY="319.0" onAction="#goToReg" text="Not Registered?" />
+      <Button fx:id="clickLogIn" layoutX="14.0" layoutY="343.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="247.0" styleClass="button-main" text="Log In" />
       <Text fill="WHITE" layoutX="14.0" layoutY="69.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="table-back" text="Username" wrappingWidth="112.58319091796875" />
       <Text fill="WHITE" layoutX="14.0" layoutY="162.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="table-back" text="Password" wrappingWidth="175.20000000000005" />
       <Text fill="WHITE" layoutX="14.0" layoutY="27.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text-color" text="WELCOME TO (INSERT NAME)" />
       <Label layoutX="14.0" layoutY="99.0" prefHeight="50.0" prefWidth="254.0" />
       <Label layoutX="14.0" layoutY="192.0" prefHeight="50.0" prefWidth="254.0" />
-      <Hyperlink fx:id="regUser" layoutX="14.0" layoutY="319.0" onAction="#goToReg" text="Not Registered?" />
       <Label fx:id="idkerr" layoutX="10.0" layoutY="268.0" prefHeight="50.0" prefWidth="254.0" styleClass="labelerr-color" />
    </children>
 </AnchorPane>

@@ -21,12 +21,10 @@
             <Font size="25.0" />
          </font>
       </Text>
-      <Button fx:id="logOut" layoutX="495.0" layoutY="377.0" mnemonicParsing="false" onAction="#logOutHandle" prefHeight="26.0" prefWidth="108.0" styleClass="button-main" text="Log out" />
-      <Button fx:id="edit" layoutX="492.0" layoutY="105.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="108.0" styleClass="button-main" text="Edit Profile" />
       <ImageView fx:id="profilePic" fitHeight="87.0" fitWidth="108.0" layoutX="502.0" pickOnBounds="true" preserveRatio="true" />
       <AnchorPane layoutY="50.0" prefHeight="350.0" prefWidth="486.0" style="-fx-background-color: #282626;">
          <children>
-            <Button fx:id="loadMap" layoutX="392.0" layoutY="12.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="87.0" style="-fx-background-color: #f87400;" styleClass="button-main" text="Load Map" textFill="WHITE">
+            <Button fx:id="newActivity" layoutX="14.0" layoutY="12.0" mnemonicParsing="false" onAction="#handleOpenGpxChooser" prefHeight="25.0" prefWidth="108.0" style="-fx-background-color: #f87400;" styleClass="button-main" text="New Activity" textFill="WHITE">
                <graphic>
                   <ImageView fitHeight="15.0" fitWidth="15.0" pickOnBounds="true" preserveRatio="true" rotate="-45.0">
                      <image>
@@ -38,7 +36,7 @@
                   <Font name="Arial Black" size="10.0" />
                </font>
             </Button>
-            <Button fx:id="newActivity" layoutX="14.0" layoutY="12.0" mnemonicParsing="false" onAction="#handleOpenGpxChooser" prefHeight="25.0" prefWidth="108.0" style="-fx-background-color: #f87400;" styleClass="button-main" text="New Activity" textFill="WHITE">
+            <Button fx:id="loadMap" layoutX="392.0" layoutY="12.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="87.0" style="-fx-background-color: #f87400;" styleClass="button-main" text="Load Map" textFill="WHITE">
                <graphic>
                   <ImageView fitHeight="15.0" fitWidth="15.0" pickOnBounds="true" preserveRatio="true" rotate="-45.0">
                      <image>
@@ -61,7 +59,7 @@
                <children>
                   <AnchorPane prefHeight="48.0" prefWidth="466.0" GridPane.rowIndex="1">
                      <children>
-                        <Button layoutY="5.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="121.0" style="-fx-background-color: #f87400;" styleClass="button-main" text="Monthly Stats" textFill="WHITE">
+                        <Button fx:id="MonStats" layoutY="5.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="121.0" style="-fx-background-color: #f87400;" styleClass="button-main" text="Monthly Stats" textFill="WHITE">
                            <graphic>
                               <ImageView fitHeight="35.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
                                  <image>
@@ -88,7 +86,9 @@
             <VBox layoutX="482.0" layoutY="-58.0" prefHeight="406.0" prefWidth="5.0" styleClass="vbox-color" />
          </children>
       </AnchorPane>
+      <Button fx:id="edit" layoutX="492.0" layoutY="105.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="108.0" styleClass="button-main" text="Edit Profile" />
       <Button fx:id="history" layoutX="491.0" layoutY="225.0" mnemonicParsing="false" onAction="#openHistory" prefHeight="26.0" prefWidth="108.0" styleClass="button-main" text="History" />
       <Label layoutX="533.0" layoutY="87.0" styleClass="text-color" text="USER" />
+      <Button fx:id="logOut" layoutX="495.0" layoutY="377.0" mnemonicParsing="false" onAction="#logOutHandle" prefHeight="26.0" prefWidth="108.0" styleClass="button-main" text="Log out" />
    </children>
 </AnchorPane>
