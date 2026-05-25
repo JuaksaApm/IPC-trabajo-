@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Date;
 import java.util.ResourceBundle;
 import javafx.application.Platform;
@@ -239,7 +237,6 @@ public class MenuController implements Initializable {
         Activity registered = SportActivityApp.getInstance().importActivity(selectedGpx);
         
         if (registered != null) {
-            // Nuke the duplicate check. Always refresh to reflect the database reality.
             refreshMenuActivityTable();
         } else {
             showInvalidGpxAlert("Could not parse or persist the GPX activity data.");

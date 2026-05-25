@@ -25,7 +25,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javax.swing.plaf.FileChooserUI;
 import upv.ipc.sportlib.SportActivityApp;
 import upv.ipc.sportlib.User;
 

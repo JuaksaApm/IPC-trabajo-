@@ -54,9 +54,8 @@ public class CumulativeTotalsController implements Initializable {
         LocalDateTime bef = curr.minusMonths(1);
 
         for(Activity a : list) {
-            var a_time = a.getEndTime();
+            LocalDateTime a_time = a.getEndTime();
             
-            // Protect against NPEs for bad GPX headers AND enforce the 1-month boundary
             if (a.getDuration() == null || a_time == null || a_time.compareTo(bef) < 0 || a_time.compareTo(curr) > 0) {
                 continue; 
             }
