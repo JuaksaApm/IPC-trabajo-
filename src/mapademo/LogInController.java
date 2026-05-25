@@ -52,6 +52,8 @@ public class LogInController implements Initializable {
         regUser.setOnAction(this::goToReg);
         Platform.runLater(() -> {
         Stage stage = (Stage) clickLogIn.getScene().getWindow();
+        stage.setWidth(285);
+        stage.setHeight(420);
         stage.setMinWidth(285);
         stage.setMinHeight(420);
     });

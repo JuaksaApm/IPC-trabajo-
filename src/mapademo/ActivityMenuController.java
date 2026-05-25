@@ -500,6 +500,8 @@ public class ActivityMenuController implements Initializable {
 
         Platform.runLater(() -> {
             Stage stage = (Stage) elevationLabel.getScene().getWindow();
+            stage.setWidth(1315);
+            stage.setHeight(900);
             stage.setMinWidth(1315);
             stage.setMinHeight(900);
         });

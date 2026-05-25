@@ -76,6 +76,8 @@ public class CumulativeTotalsController implements Initializable {
         Platform.runLater(() -> {
             Stage stage = (Stage) goBack.getScene().getWindow();
             if (stage != null) {
+                stage.setWidth(630);
+                stage.setHeight(240);
                 stage.setMinWidth(630);
                 stage.setMinHeight(240);
             }

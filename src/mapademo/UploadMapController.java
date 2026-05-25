@@ -80,6 +80,8 @@ public class UploadMapController implements Initializable {
         
         Platform.runLater(() -> {
         Stage stage = (Stage) SelectJPG.getScene().getWindow();
+        stage.setWidth(630);
+        stage.setHeight(440);
         stage.setMinWidth(630);
         stage.setMinHeight(440);
     });

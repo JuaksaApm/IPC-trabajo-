@@ -117,6 +117,8 @@ public class HistoryController implements Initializable {
     
     Platform.runLater(() -> {
         Stage stage = (Stage) menubutt.getScene().getWindow();
+        stage.setWidth(615);
+        stage.setHeight(440);
         stage.setMinWidth(615);
         stage.setMinHeight(440);
     });

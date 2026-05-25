@@ -81,6 +81,8 @@ public class EditController implements Initializable {
         confirm.setOnAction(this::con);
         Platform.runLater(() -> {
         Stage stage = (Stage) cancel.getScene().getWindow();
+        stage.setWidth(430);
+        stage.setHeight(440);
         stage.setMinWidth(430);
         stage.setMinHeight(440);
     });

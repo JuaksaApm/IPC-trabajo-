@@ -85,6 +85,8 @@ public class RegisterController implements Initializable {
         
         Platform.runLater(() -> {
         Stage stage = (Stage) avatarSel.getScene().getWindow();
+        stage.setWidth(430);
+        stage.setHeight(440);
         stage.setMinWidth(430);
         stage.setMinHeight(440);
     });
