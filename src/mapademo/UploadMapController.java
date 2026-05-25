@@ -174,7 +174,7 @@ public class UploadMapController implements Initializable {
         if(failed)return;
         SportActivityApp app = SportActivityApp.getInstance();
         app.addMapRegion(currFile.getName(), currFile, latMin, latMax, lonMin, lonMax);
-            
+        gotoMainMenu();
         
     }
 }
