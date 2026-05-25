@@ -1,27 +1,26 @@
 /*
  * ============================================================
- *  PROYECTO EJEMPLO – IPC 2026
+ *  Running la Safor – IPC 2026
  *  Asignatura: Interfaces Persona-Computador
  *  Universitat Politècnica de València
  * ============================================================
  *
  *  DESCRIPCIÓN GENERAL
  *  -------------------
- *  Este controlador gestiona la vista principal de la aplicación
- *  de puntos de interés (POI) sobre un mapa.
- *
- *  Funcionalidades implementadas:
- *   1. Carga y visualización de una imagen de mapa.
+ *  Controlador de la vista de actividad. Gestiona:
+ *   1. Carga y visualización del mapa de la actividad.
  *   2. Zoom interactivo mediante un Slider.
- *   3. Añadir POIs (texto) y anotaciones (círculos) con clic derecho.
- *   4. Listado de POIs en un ListView con CellFactory personalizada.
- *   5. Centrado animado del mapa al seleccionar un POI de la lista.
- *   6. Modo inserción: activar con botón y colocar POI con siguiente clic.
+ *   3. Trazado de la ruta GPX sobre el mapa.
+ *   4. Anotaciones geográficas con clic derecho (texto, punto, línea, círculo).
+ *   5. Listado de anotaciones con centrado del mapa al seleccionar.
+ *   6. Estadísticas de la actividad (distancia, duración, velocidad…).
+ *   7. Perfil de elevación interactivo con resaltado sobre el mapa.
+ *   8. Visualización de la velocidad por tramos codificada en color.
  *
  *  PATRÓN UTILIZADO: MVC (Model-View-Controller)
- *   - Modelo : clase Poi  (datos del punto de interés)
- *   - Vista  : FXMLDocument.fxml  (layout declarativo)
- *   - Control: esta clase (lógica de interacción)
+ *   - Modelo : Activity, TrackPoint, Annotation  (sportlib)
+ *   - Vista  : ActivityMenu.fxml
+ *   - Control: esta clase
  *
  * ============================================================
  */
@@ -32,9 +31,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -48,11 +44,9 @@ import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
-import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Slider;
-import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -66,7 +60,6 @@ import javafx.scene.shape.Polyline;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 import upv.ipc.sportlib.Activity;
 import upv.ipc.sportlib.Annotation;
 import upv.ipc.sportlib.GeoPoint;
@@ -166,24 +159,10 @@ public class ActivityMenuController implements Initializable {
     @FXML
     private Slider zoom_slider;
 
-    /**
-     * Botón de pin visible sobre el mapa.
-     * Se desplaza hasta la posición del POI seleccionado en la lista.
-     */
-    private MenuButton map_pin;
-
-    // FIX 5 — Eliminadas las variables sin uso:
-    //   · 'mousePosistion' (errata + duplicado de mousePosition)
-    //   · 'pin_info'       (inyectada pero nunca actualizada)
-
-    /** Etiqueta en la barra de estado que muestra las coordenadas del ratón. */
-    private int annotationIndexCounter = 1;
     private Activity currentActivity;
-    
+
     @FXML
     private Label mousePosition;
-    @FXML
-    private SplitPane splitPane;
     @FXML
     private Label lblDistance;
     @FXML
@@ -229,6 +208,7 @@ public class ActivityMenuController implements Initializable {
     private double maxSegmentSpeedKmh = Double.NEGATIVE_INFINITY;
     private Circle elevationHoverMarker;
     private final List<Line> speedOverlayLines = new ArrayList<>();
+    private final List<javafx.scene.Node> annotationNodes = new ArrayList<>();
 
 
     // =========================================================
@@ -371,14 +351,7 @@ public class ActivityMenuController implements Initializable {
         // en modo inserción (FIX 2).
         mapPane.setOnMouseClicked(e -> {
             if (e.getButton() == MouseButton.SECONDARY) {
-                // Clic derecho → mostrar menú contextual
                 onMapRightClick(e.getX(), e.getY());
-
-            } else if (e.getButton() == MouseButton.PRIMARY && insertionMode) {
-                // FIX 2: clic izquierdo en modo inserción → añadir POI y desactivar modo
-                insertionMode = false;
-                mapPane.setStyle(""); // Restauramos el cursor normal
-                addPoi(e.getX(), e.getY());
             }
         });
 
@@ -415,17 +388,8 @@ public class ActivityMenuController implements Initializable {
      * @param y coordenada Y del clic en el sistema local del mapPane
      */
     private void onMapRightClick(double x, double y) {
-        // FIX 6: cerramos el menú si ya estaba visible (evita instancias flotantes)
         mapContextMenu.hide();
-
-        // Actualizamos las acciones de los items con las coordenadas actuales.
-        // Usamos variables final para que el lambda pueda capturarlas.
-        final double clickX = x;
-        final double clickY = y;
-        mapContextMenu.getItems().get(0).setOnAction(e -> promptForAnnotation(clickX, clickY));
-        mapContextMenu.getItems().get(1).setOnAction(e -> promptForAnnotation(clickX, clickY));
-
-        // Mostramos el menú en coordenadas de pantalla
+        mapContextMenu.getItems().get(0).setOnAction(e -> promptForAnnotation(x, y));
         mapContextMenu.show(
             mapPane.getScene().getWindow(),
             mapPane.localToScreen(x, y).getX(),
@@ -464,20 +428,23 @@ public class ActivityMenuController implements Initializable {
             (observable, oldVal, newVal) -> zoom((Double) newVal)
         );
 
-        // Los items se crean aquí sin acción; las acciones se asignan
-        // en onMapRightClick() con las coordenadas correctas de cada clic.
-        MenuItem miText   = new MenuItem("📝 Añadir texto");
-        MenuItem miCircle = new MenuItem("⭕ Añadir círculo");
-        mapContextMenu = new ContextMenu(miText, miCircle);
+        MenuItem miText = new MenuItem("📝 Add annotation");
+        mapContextMenu = new ContextMenu(miText);
 
-               //  setCellFactory() define cómo se renderiza cada celda
-        //  de forma independiente al modelo Poi.
-        //  Aquí mostramos "CÓDIGO – Nombre" en cada fila.
+        // ── ListView: right-click to remove an annotation ──────────────
+        MenuItem miRemove = new MenuItem("🗑 Remove annotation");
+        miRemove.setOnAction(e -> {
+            Annotation selected = map_annotations_listview.getSelectionModel().getSelectedItem();
+            if (selected == null) return;
+            SportActivityApp.getInstance().removeAnnotation(selected);
+            map_annotations_listview.getItems().remove(selected);
+            reloadAnnotationsOnMap();
+        });
+        map_annotations_listview.setContextMenu(new ContextMenu(miRemove));
 
         // ── Carga del mapa inicial ─────────────────────────────────────
-        // El fichero se busca relativo al directorio de trabajo del proyecto.
         buildMap(new File("maps/upv.jpg"));
-        
+
         map_annotations_listview.setCellFactory(listView -> new ListCell<Annotation>() {
             @Override
             protected void updateItem(Annotation ann, boolean empty) {
@@ -485,8 +452,7 @@ public class ActivityMenuController implements Initializable {
                 if (empty || ann == null) {
                     setText(null);
                 } else {
-                    // Display the layout marker index alongside the descriptive text
-                    setText("[" + ann.getId() + "] " + ann.getType() + ": " + ann.getText());
+                    setText(ann.getType() + ": " + ann.getText());
                 }
             }
         });
@@ -587,74 +553,6 @@ public class ActivityMenuController implements Initializable {
     }
 
     // =========================================================
-    //  AÑADIR UN POI (texto) AL MAPA
-    // =========================================================
-
-    /**
-     * Muestra un diálogo para introducir el nombre del nuevo POI,
-     * lo añade al ListView y dibuja su etiqueta sobre el mapa.
-     *
-     * @param x coordenada X del clic en el sistema local del mapPane
-     * @param y coordenada Y del clic en el sistema local del mapPane
-     */
-    private void addPoi(double x, double y) {
-
-        // ── Construcción del diálogo personalizado ────────────────────
-        Dialog<Poi> poiDialog = new Dialog<>();
-        poiDialog.setTitle("Nuevo POI");
-        poiDialog.setHeaderText("Introduce un nuevo POI");
-
-        // Personalizamos el icono de la ventana del diálogo
-        Stage dialogStage = (Stage) poiDialog.getDialogPane().getScene().getWindow();
-        dialogStage.getIcons().add(
-            new Image(getClass().getResourceAsStream("/resources/logo.png"))
-        );
-
-        // Botones del diálogo: Aceptar y Cancelar
-        ButtonType okButton = new ButtonType("Aceptar", ButtonBar.ButtonData.OK_DONE);
-        poiDialog.getDialogPane().getButtonTypes().addAll(okButton, ButtonType.CANCEL);
-
-        // Campo de texto para el nombre del POI
-        TextField nameField = new TextField();
-        nameField.setPromptText("Nombre del POI");
-
-        // Layout del contenido del diálogo (VBox con espaciado de 10 px)
-        VBox vbox = new VBox(10, new Label("Nombre:"), nameField);
-        poiDialog.getDialogPane().setContent(vbox);
-
-        // ResultConverter: transforma la selección del botón en un objeto Poi.
-        // FIX 1: ya no usamos coordenadas provisionales (0,0); pasamos (x,y)
-        // directamente al constructor para que el modelo sea coherente desde el inicio.
-        poiDialog.setResultConverter(dialogButton -> {
-            if (dialogButton == okButton) {
-                return new Poi(nameField.getText().trim(), x, y);
-            }
-            return null;
-        });
-
-        // Mostramos el diálogo y esperamos la respuesta del usuario
-        Optional<Poi> result = poiDialog.showAndWait();
-
-        if (result.isPresent()) {
-            Poi poi = result.get();
-
-            // FIX 1: confirmamos la posición como Point2D para compatibilidad
-            // con getPosition(), usando las mismas coordenadas (x, y).
-            poi.setPosition(new Point2D(x, y));
-
-            // Añadimos el POI al ListView (la CellFactory mostrará nombre y código)
-            //map_annotations_listview.getItems().add(poi);
-
-            // FIX 1: usamos (x, y) tanto para el modelo como para el Text,
-            // garantizando que la etiqueta aparezca exactamente donde se hizo clic.
-            Text text = new Text(poi.getCode());
-            text.setX(x);
-            text.setY(y);
-            mapPane.getChildren().add(text);
-        }
-    }
-
-    // =========================================================
     //  CAMBIAR EL MAPA (selector de fichero)
     // =========================================================
 
@@ -682,29 +580,6 @@ public class ActivityMenuController implements Initializable {
             buildMap(imgFile); // Reconstruimos la vista con la nueva imagen
             map_annotations_listview.getItems().clear(); // Borramos los datos del mapa anterior
         }
-    }
-
-    // =========================================================
-    //  AÑADIR UN CÍRCULO AL MAPA
-    // =========================================================
-
-    /**
-     * Dibuja un círculo rojo de radio 10 px en la posición indicada.
-     *
-     * Ejemplo sencillo de cómo añadir formas vectoriales (Shape) sobre el mapa.
-     * Los alumnos pueden extenderlo para:
-     *  - Elegir color dinámicamente.
-     *  - Asociar información al círculo (tooltip, popup, etc.).
-     *  - Permitir moverlo con arrastrar y soltar (drag and drop).
-     *
-     * @param x coordenada X en el sistema local del mapPane
-     * @param y coordenada Y en el sistema local del mapPane
-     */
-    private void addCircle(double x, double y) {
-        Circle circle = new Circle(10, Color.RED); // radio = 10 px, color = rojo
-        circle.setCenterX(x);
-        circle.setCenterY(y);
-        mapPane.getChildren().add(circle); // Se añade sobre el mapa como cualquier nodo
     }
 
     @FXML
@@ -824,7 +699,7 @@ public class ActivityMenuController implements Initializable {
 
         // 11. Wipe previous layout records from the side panel view before rendering anew
         map_annotations_listview.getItems().clear();
-        this.annotationIndexCounter = 1;
+        annotationNodes.clear();
 
         // 12. Scenario 4.3 Compliance: Extract historical records and trace them dynamically onto the canvas view
         for (Annotation ann : activity.getAnnotations()) {
@@ -990,28 +865,6 @@ public class ActivityMenuController implements Initializable {
     }
 
     /**
-     * Plots a clean, visually structured number index symbol marker on the map canvas area.
-     */
-    private void drawMarkerSymbolOnCanvas(double x, double y, int indexNumber) {
-        // Build a background base layout bubble wrapper
-        Circle badge = new Circle(11, Color.web("#E74C3C"));
-        badge.setCenterX(x);
-        badge.setCenterY(y);
-        badge.setStroke(Color.WHITE);
-        badge.setStrokeWidth(1.5);
-
-        // Center the textual index directly within the coordinate badge circle
-        Text text = new Text(String.valueOf(indexNumber));
-        text.setFill(Color.WHITE);
-        text.setStyle("-fx-font-weight: bold; -fx-font-size: 11px;");
-        text.setX(x - 4); // Micro horizontal adjustment spacing
-        text.setY(y + 4); // Micro vertical adjustment spacing
-
-        // Superimpose visual nodes cleanly onto the canvas Pane layer
-        mapPane.getChildren().addAll(badge, text);
-    }
-    
-    /**
      * Evaluates an annotation object data profile and renders its corresponding 
      * vector shapes or text labels dynamically onto the map canvas layout.
      */
@@ -1028,49 +881,60 @@ public class ActivityMenuController implements Initializable {
 
         switch (ann.getType()) {
             case POINT:
-                // Scenario 4.2 Point Specification: Plot a distinct filled tracking circle indicator node
                 Circle pointMarker = new Circle(p1.getX(), p1.getY(), 7, renderColor);
                 pointMarker.setStroke(Color.WHITE);
                 pointMarker.setStrokeWidth(1.5);
                 mapPane.getChildren().add(pointMarker);
+                annotationNodes.add(pointMarker);
                 break;
 
             case TEXT:
-                // Scenario 4.2 Text Specification: Render a clean descriptive context text node anchored at pixels
                 Text textLabel = new Text(p1.getX(), p1.getY() - 8, ann.getText());
                 textLabel.setFill(renderColor);
                 textLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 12px;");
                 mapPane.getChildren().add(textLabel);
+                annotationNodes.add(textLabel);
                 break;
 
             case LINE:
-                // Scenario 4.2 Line Specification: Render a linear path connector segment between points 
                 if (ann.getGeoPoints().size() >= 2) {
                     Point2D p2 = proj.project(ann.getGeoPoints().get(1));
                     Polyline lineSegment = new Polyline(p1.getX(), p1.getY(), p2.getX(), p2.getY());
                     lineSegment.setStroke(renderColor);
                     lineSegment.setStrokeWidth(ann.getStrokeWidth());
                     mapPane.getChildren().add(lineSegment);
+                    annotationNodes.add(lineSegment);
                 }
                 break;
 
             case CIRCLE:
-                // Scenario 4.2 Circle Specification: Measure distance radius offset to anchor edge boundaries 
-                double radiusPx = 25.0; // Default rendering boundary width offset context fallback
+                double radiusPx = 25.0;
                 if (ann.getGeoPoints().size() >= 2) {
                     Point2D p2 = proj.project(ann.getGeoPoints().get(1));
-                    radiusPx = p1.distance(p2); // Compute pixel distance between center and edge tracking anchors
+                    radiusPx = p1.distance(p2);
                 }
                 Circle geographicArea = new Circle(p1.getX(), p1.getY(), radiusPx, Color.TRANSPARENT);
                 geographicArea.setStroke(renderColor);
                 geographicArea.setStrokeWidth(ann.getStrokeWidth());
                 mapPane.getChildren().add(geographicArea);
+                annotationNodes.add(geographicArea);
                 break;
         }
     }
     
+    /**
+     * Removes all annotation visuals from the map and redraws them
+     * from the current activity's annotation list. Called after a deletion.
+     */
+    private void reloadAnnotationsOnMap() {
+        mapPane.getChildren().removeAll(annotationNodes);
+        annotationNodes.clear();
+        for (Annotation ann : currentActivity.getAnnotations()) {
+            renderSingleAnnotation(ann);
+        }
+    }
+
     // =========================================================
-    // Elevation Profile
     // =========================================================
     private void ensureElevationHoverMarker() {
         if (mapPane == null) return;
@@ -1123,8 +987,7 @@ public class ActivityMenuController implements Initializable {
         double cumulativeKm = 0.0;
         TrackPoint previous = null;
 
-        for (int i = 0; i < points.size(); i++) {
-            TrackPoint current = points.get(i);
+        for (TrackPoint current : points) {
 
             Point2D pixel = projection.project(current);
             double altitude = current.getElevation();
@@ -1328,7 +1191,7 @@ public class ActivityMenuController implements Initializable {
      */
     private void initializeSpeedOverlay(List<TrackPoint> points) {
         if (currentActivity == null || mapPane == null || points == null || points.size() < 2) return;
-        if (elevationSamples.size() < 2 || segmentSpeeds.size() < 1) return;
+        if (elevationSamples.size() < 2 || segmentSpeeds.isEmpty()) return;
 
         if (!speedOverlayLines.isEmpty()) {
             mapPane.getChildren().removeAll(speedOverlayLines);
