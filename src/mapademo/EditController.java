@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.util.ResourceBundle;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -78,12 +79,16 @@ public class EditController implements Initializable {
         cancel.setOnAction(this::cancelEdit);
         selAvatar.setOnAction(this::avatar);
         confirm.setOnAction(this::con);
-        
-        
+        Platform.runLater(() -> {
+        Stage stage = (Stage) cancel.getScene().getWindow();
+        stage.setMinWidth(430);
+        stage.setMinHeight(440);
+    });
     }    
 
     @FXML
     private void initialize(ActionEvent event) {
+        
     }
     
     private void cancelEdit(ActionEvent event){
@@ -93,8 +98,10 @@ public class EditController implements Initializable {
             //get the stage from the button
         Stage stage = (Stage) cancel.getScene().getWindow();    
             //change scene
+            
         Scene scene = new Scene(mapaRoot);
         stage.setScene(scene);
+        
         stage.show();
         }catch(IOException e){
         System.out.println("Error while loading");

@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.util.ResourceBundle;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -81,6 +82,12 @@ public class RegisterController implements Initializable {
         register.setOnAction(this::handleRegister);
         cancelReg.setOnAction(this::cancel);
         avatarSel.setOnAction(this::avatar);
+        
+        Platform.runLater(() -> {
+        Stage stage = (Stage) avatarSel.getScene().getWindow();
+        stage.setMinWidth(430);
+        stage.setMinHeight(440);
+    });
     }    
     
      private void handleRegister(ActionEvent event) {

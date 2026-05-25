@@ -7,6 +7,7 @@ package mapademo;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -47,6 +48,12 @@ public class LogInController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         clickLogIn.setOnAction(this::handleLogIn);
         regUser.setOnAction(this::goToReg);
+        
+        Platform.runLater(() -> {
+        Stage stage = (Stage) clickLogIn.getScene().getWindow();
+        stage.setMinWidth(285);
+        stage.setMinHeight(420);
+    });
     }    
     
     private void handleLogIn(ActionEvent event) {

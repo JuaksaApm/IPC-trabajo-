@@ -39,6 +39,7 @@ import java.time.ZoneId;
 import java.time.chrono.ChronoLocalDateTime;
 import java.util.List;
 import java.util.ResourceBundle;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -92,6 +93,12 @@ public class CumulativeTotalsController implements Initializable {
         TotDesc.setText(df.format(des)+" m.");
         CumDist.setText(df.format(dist/1000)+" Km.");
         TotTime.setText(df.format(time/1000)+" min.");
+        
+        Platform.runLater(() -> {
+        Stage stage = (Stage) goBack.getScene().getWindow();
+        stage.setMinWidth(630);
+        stage.setMinHeight(240);
+    });
     }    
     private void handleGoBack(ActionEvent event){
         try {

@@ -12,6 +12,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 import java.util.ResourceBundle;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -75,6 +76,12 @@ public class UploadMapController implements Initializable {
         CancelBut.setOnAction(this::handleCancel);
         SelectJPG.setOnAction(this::handleSelect);
         UploadMapBut.setOnAction(this::handleLoad);
+        
+        Platform.runLater(() -> {
+        Stage stage = (Stage) SelectJPG.getScene().getWindow();
+        stage.setMinWidth(630);
+        stage.setMinHeight(440);
+    });
     }    
     private void handleCancel(ActionEvent event){
         gotoMainMenu();

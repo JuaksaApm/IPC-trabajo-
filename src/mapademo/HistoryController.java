@@ -9,6 +9,7 @@ import java.net.URL;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.ResourceBundle;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.event.ActionEvent;
@@ -113,6 +114,12 @@ public class HistoryController implements Initializable {
     lblTotalDuration.setText("Total time: " + totalMinutes + " min");
     lblTotalImported.setText("Total imported: " + totalImported);
     
+    
+    Platform.runLater(() -> {
+        Stage stage = (Stage) menubutt.getScene().getWindow();
+        stage.setMinWidth(615);
+        stage.setMinHeight(440);
+    });
     }    
 
     @FXML

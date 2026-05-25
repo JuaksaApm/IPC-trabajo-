@@ -12,6 +12,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 import java.util.ResourceBundle;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -131,6 +132,12 @@ public class MenuController implements Initializable {
                 }
             }
         });
+        
+        Platform.runLater(() -> {
+        Stage stage = (Stage) logOut.getScene().getWindow();
+        stage.setMinWidth(615);
+        stage.setMinHeight(440);
+    });
     }    
     private void handleLoadMap(ActionEvent event){
         
