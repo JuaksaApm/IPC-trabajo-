@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/javafx/FXMLController.java to edit this template
- */
 package mapademo;
 
 import java.io.File;
@@ -64,9 +60,6 @@ public class MenuController implements Initializable {
     @FXML
     private Button MonStats;
 
-    /**
-     * Initializes the controller class.
-     */ 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         logOut.setOnAction(this::logOut);
@@ -141,7 +134,6 @@ public class MenuController implements Initializable {
     }
     
     private void handleLoadMap(ActionEvent event){
-        
         try {
             Parent mapaRoot = FXMLLoader.load(getClass().getResource("MapUpload.fxml"));
             Stage stage = (Stage) loadMap.getScene().getWindow();
@@ -202,6 +194,7 @@ public class MenuController implements Initializable {
             System.out.println("Error while loading logIn screen");
         }
     }
+
     private void handleMonStats(ActionEvent event){
         try {
             Parent mapaRoot = FXMLLoader.load(getClass().getResource("CumulativeTotals.fxml"));
@@ -394,78 +387,5 @@ public class MenuController implements Initializable {
         public String getDate() { return date; }
         public File getFile() { return file; }
         public Activity getActivityRef() { return activityRef; }
-    }
-   
-    /**
-     * Fallback utility tool to extract track headers locally.
-     */
-    public static class GpxMetadataExtractor {
-
-        public static class Metadata {
-            public String distance = "0.0 km";
-            public String time = "00:00:00";
-            public String date = "--/--/----";
-        }
-
-        public static Metadata extract(File file) {
-            Metadata meta = new Metadata();
-            try {
-                org.w3c.dom.Document doc = javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file);
-                org.w3c.dom.NodeList trkptList = doc.getElementsByTagName("trkpt");
-                int totalPoints = trkptList.getLength();
-
-                if (totalPoints == 0) return meta;
-
-                double totalDistanceKm = 0.0;
-                Instant startTime = null;
-                Instant endTime = null;
-
-                for (int i = 0; i < totalPoints; i++) {
-                    org.w3c.dom.Element currentPt = (org.w3c.dom.Element) trkptList.item(i);
-                    org.w3c.dom.NodeList timeNodes = currentPt.getElementsByTagName("time");
-                    if (timeNodes.getLength() > 0) {
-                        Instant ptTime = Instant.parse(timeNodes.item(0).getTextContent());
-                        if (startTime == null) startTime = ptTime;
-                        endTime = ptTime;
-                    }
-
-                    if (i > 0) {
-                        org.w3c.dom.Element prevPt = (org.w3c.dom.Element) trkptList.item(i - 1);
-                        double lat1 = Double.parseDouble(prevPt.getAttribute("lat"));
-                        double lon1 = Double.parseDouble(prevPt.getAttribute("lon"));
-                        double lat2 = Double.parseDouble(currentPt.getAttribute("lat"));
-                        double lon2 = Double.parseDouble(currentPt.getAttribute("lon"));
-
-                        totalDistanceKm += haversine(lat1, lon1, lat2, lon2);
-                    }
-                }
-
-                meta.distance = String.format("%.2f km", totalDistanceKm);
-
-                if (startTime != null && endTime != null) {
-                    Duration duration = Duration.between(startTime, endTime);
-                    long s = duration.getSeconds();
-                    meta.time = String.format("%02d:%02d:%02d", s / 3600, (s % 3600) / 60, s % 60);
-
-                    Date startDate = Date.from(startTime);
-                    meta.date = new SimpleDateFormat("dd/MM/yyyy").format(startDate);
-                }
-
-            } catch (Exception e) {
-                System.err.println("Error processing GPX metadata: " + e.getMessage());
-            }
-            return meta;
-        }
-
-        private static double haversine(double lat1, double lon1, double lat2, double lon2) {
-            double R = 6371.0;
-            double dLat = Math.toRadians(lat2 - lat1);
-            double dLon = Math.toRadians(lon2 - lon1);
-            double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                       Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
-                       Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c;
-        }
     }
 }
